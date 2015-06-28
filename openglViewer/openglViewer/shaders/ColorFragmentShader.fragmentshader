@@ -1,0 +1,117 @@
+#version 330 core
+
+// Interpolated values from the vertex shaders
+in vec3 fragmentColor;
+in vec4 normal_worldspace;
+in vec4 position_worldspace;
+in vec4 lightPosition_worldspace;
+in vec4 scene_center;
+
+uniform vec3 Scene_center;
+uniform vec3 LightPosition_worldspace;
+
+// material
+uniform vec3 MatAmbientColor;
+uniform vec3 MatDiffuseColor;
+uniform vec3 MatSpecularColor;
+uniform float MatShininess;
+uniform int IsTexAvailable;
+uniform sampler2D TextureSampler;
+
+// light - single only :(
+uniform vec3 LightAmbientColor;
+uniform vec3 LightDiffuseColor;
+uniform vec3 LightSpecularColor;
+
+// Interpolated values from the vertex shaders
+in vec2 UV;
+
+// Ouput data
+out vec3 color;
+
+void main(){
+
+	//gl_FragColor = texture( TextureSampler, UV );return;
+
+	vec4 matDiffuse = vec4(MatAmbientColor, 1.0);
+	vec4 matAmbient = vec4(MatDiffuseColor, 1.0)*matDiffuse;
+	vec4 matSpecular = vec4(MatSpecularColor, 1.0);
+	float shininess = MatShininess;
+
+	if(IsTexAvailable > 0)
+	{
+		vec4 color = texture( TextureSampler, UV );
+		matDiffuse = color;
+		matAmbient = color*matDiffuse;
+		matSpecular = color;
+	}
+	 
+	vec4 N = normalize(normal_worldspace);
+	vec4 L = normalize(lightPosition_worldspace - position_worldspace);
+	vec4 E = normalize(-position_worldspace);
+	vec4 R = normalize(-reflect(L,N));
+	
+	float d = length(lightPosition_worldspace - position_worldspace);
+	float pd = length(scene_center -  lightPosition_worldspace);
+	float lightPower = pow(pd, 2.3);
+
+	float cosTheta = clamp( dot( N,L ), 0,1 );
+	float cosAlpha = clamp( dot( E,R ), 0,1 );
+
+	//attenuation
+    float attenuation = 1.0 / (1.0 + + d + pow(d, 2));
+
+	vec4 finalAmbient = vec4(LightAmbientColor,1.0)*matAmbient;
+	vec4 finalDiffuse = vec4(LightDiffuseColor,1.0)*matDiffuse*cosTheta;
+	vec4 finalSpecular = vec4(LightSpecularColor,1.0)*matSpecular*pow(cosAlpha, shininess)*attenuation*lightPower;
+
+    gl_FragColor = finalAmbient + finalDiffuse + finalSpecular;
+
+	//float shininess = 0.05;
+	//float lightPower = 50.0;
+	//vec4 lightColor = vec4(1.0, 1.0, 1.0, 1.0);
+	//
+	//vec4 diffuseColor = vec4(0.0, 0.0, 1.0, 1.0);
+	//vec4 ambientColor = vec4(0.1, 0.1, 0.1, 1.0);
+	//vec4 specularColor = diffuseColor * 0.3;
+	//
+	//vec4 spec = vec4(0.0);
+	//
+	//vec4 lightDir = normalize(lightPosition_worldspace - position_worldspace);
+	//float distance = length(lightPosition_worldspace - position_worldspace );
+	//  
+	//float Idiff = lightPower * dot(normal_worldspace, lightDir)/(distance*distance);
+	//
+	//if(Idiff > 0.0)
+	//{
+	//	vec4 halfVec = normalize(position_worldspace + lightDir);
+	//	float ISpec = max(dot(halfVec, normal_worldspace), 0.0);
+	//	spec = specularColor * pow(ISpec, shininess);
+	//} 
+	//
+	//gl_FragColor = Idiff * diffuseColor * lightColor + ambientColor;
+
+	//vec3 LightColor = vec3(0,0,1);
+	//float LightPower = 40.0;
+													
+	//// Material properties
+	//vec3 MaterialDiffuseColor = fragmentColor;
+	//vec3 MaterialAmbientColor = vec3(0.1,0.1,0.1) * MaterialDiffuseColor;
+	//vec3 MaterialSpecularColor = fragmentColor * 0.3;
+
+	//float cosTheta = clamp( dot( vertexNormal, LightDirection_worldspace ), 0,1 );
+
+	//// Distance to the light
+	//float distance = length( LightPosition_worldspace - Position_worldspace );
+
+	// Output color = color specified in the vertex shader, 
+	// interpolated between all 3 surrounding vertices
+	//color = 
+		// Ambient : simulates indirect lighting
+		//MaterialAmbientColor +
+		// Diffuse : "color" of the object
+		//MaterialDiffuseColor * LightColor * LightPower ;//* cosTheta / (distance*distance); //+
+		// Specular : reflective highlight, like a mirror
+		//MaterialSpecularColor * LightColor * LightPower * pow(cosAlpha,5) / (distance*distance);
+
+}
