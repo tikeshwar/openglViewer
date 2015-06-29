@@ -7,6 +7,7 @@ MeshDrawable::MeshDrawable()
 {
 	mAutoNormals = false;
 	mIsVisible = true;
+	mTransformMat = glm::mat4(1.0);
 }
 
 MeshDrawable::~MeshDrawable()

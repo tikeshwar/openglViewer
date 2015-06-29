@@ -51,7 +51,7 @@ int main()
 	glv::MeshDrawableSharedPtr plyWoodMeshPtr{ std::move(plyWoodMesh) };
 	{
 		glm::vec3 center = plyWoodMeshPtr->geomPackBBox().center();
-		glm::mat4 meshTransform = glm::translate(plyWoodMeshPtr->transform(), glm::vec3(0, 0, 0.0f));
+		glm::mat4 meshTransform = glm::translate(plyWoodMeshPtr->transform(), glm::vec3(0, 0.0, 0.0f));
 		plyWoodMeshPtr->setTransform(meshTransform);
 
 		glv::Material texMaterial;
@@ -61,25 +61,36 @@ int main()
 		//cubeMeshPtr->setMaterial(glv::Material(glm::vec3(1.0, 1.0, 1.0)));
 	}
 
-	//auto lightMesh = parser.read("C:/TK/CCTechViewer/CCTechViewer/TestFiles/STL/ASCII/point_light_box.stl", glv::Parser::STL);
-	//glv::MeshDrawableSharedPtr lightMeshPtr{ std::move(lightMesh) };
-	//{
-	//	glm::vec3 center = lightMeshPtr->geomPackBBox().center();
-	//	glm::mat4 meshTransform = glm::translate(lightMeshPtr->transform(), light->position());
-	//	lightMeshPtr->setTransform(meshTransform);
+	auto lightMesh = parser.read("C:/TK/CCTechViewer/CCTechViewer/TestFiles/STL/ASCII/point_light_box.stl", glv::Parser::STL);
+	glv::MeshDrawableSharedPtr lightMeshPtr{ std::move(lightMesh) };
+	{
+		glm::vec3 center = lightMeshPtr->geomPackBBox().center();
+		glm::mat4 meshTransform = glm::translate(lightMeshPtr->transform(), light->position());
+		lightMeshPtr->setTransform(meshTransform);
 
-	//	lightMeshPtr->setMaterial(glv::Material(glm::vec3(1.0, 1.0, 1.0)));
-	//	//cubeMeshPtr->setMaterial(glv::Material(glm::vec3(1.0, 1.0, 1.0)));
-	//}
+		lightMeshPtr->setMaterial(glv::Material(glm::vec3(1.0, 1.0, 1.0)));
+		//cubeMeshPtr->setMaterial(glv::Material(glm::vec3(1.0, 1.0, 1.0)));
+	}
+
+	auto bendPipeMesh = parser.read("C:/TK/CCTechViewer/CCTechViewer/TestFiles/STL/ASCII/torus.stl", glv::Parser::STL);
+	glv::MeshDrawableSharedPtr bendPipeMeshPtr{ std::move(bendPipeMesh) };
+	{
+		glm::vec3 center = bendPipeMeshPtr->geomPackBBox().center();
+		glm::mat4 meshTransform = glm::translate(bendPipeMeshPtr->transform(), glm::vec3(0.5));
+		bendPipeMeshPtr->setTransform(meshTransform);
+
+		bendPipeMeshPtr->setMaterial(glv::Material(glm::vec3(0.0, 1.0, 0.7)));
+		//cubeMeshPtr->setMaterial(glv::Material(glm::vec3(1.0, 1.0, 1.0)));
+	}
 
 	glv::Utility util;
 
 	auto rootdsp = util.getDrawableNode(plyWoodMeshPtr);
-	//auto childdsp1 = util.getDrawableNode(lightMeshPtr);
-	//auto childdsp2 = util.getDrawableNode(plyWoodMeshPtr);
+	auto childdsp1 = util.getDrawableNode(lightMeshPtr);
+	auto childdsp2 = util.getDrawableNode(bendPipeMeshPtr);
 
-	//util.connect(rootdsp, childdsp1);
-	//util.connect(rootdsp, childdsp2);
+	util.connect(rootdsp, childdsp1);
+	util.connect(rootdsp, childdsp2);
 
 	gScene->addDrawableNode(rootdsp);
 

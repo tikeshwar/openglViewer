@@ -27,20 +27,19 @@ uniform mat4 N;
 uniform vec3 LightPosition_worldspace;
 uniform vec3 Scene_center;
 uniform mat4 DepthBiasMVP;
-uniform mat4 depthMVP;
 
 void main(){	
 
 	// Output position of the vertex, in clip space : MVP * position
-	gl_Position = MVP * vec4(vertexPosition_modelspace, 1.0);
+	gl_Position = MVP * OM * vec4(vertexPosition_modelspace, 1.0);
 
-	position_worldspace = vec4(vertexPosition_modelspace, 1.0);
-	normal_worldspace = vec4(normal_modelspace, 0.0);
+	position_worldspace = OM * vec4(vertexPosition_modelspace, 1.0);
+	normal_worldspace = OM * vec4(normal_modelspace, 0.0);
 	scene_center = vec4(Scene_center, 1.0);
 
 	lightPosition_worldspace = vec4(LightPosition_worldspace, 1.0);
 	fragmentColor = vertexColor;
 
-	ShadowCoord = DepthBiasMVP * vec4(vertexPosition_modelspace, 1.0);
+	ShadowCoord = DepthBiasMVP * OM * vec4(vertexPosition_modelspace, 1.0);
 	UV = vertexUV;
 }
