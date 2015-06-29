@@ -227,7 +227,7 @@ void MeshDrawable::setMaterial(const glv::Material & material)
 	mMaterial = material;
 }
 
-void MeshDrawable::draw()
+void MeshDrawable::draw(bool ifDepthTexture)
 {
 	// 1rst attribute buffer : vertices
 	glEnableVertexAttribArray(0);
@@ -241,42 +241,45 @@ void MeshDrawable::draw()
 		(void*)0            // array buffer offset
 		);
 
-	// 2rd attribute buffer : normals
-	glEnableVertexAttribArray(1);
-	glBindBuffer(GL_ARRAY_BUFFER, mColorBuffer);
-	glVertexAttribPointer(
-		1,                                // attribute
-		3,                                // size
-		GL_FLOAT,						  // type
-		GL_FALSE,                         // normalized?
-		0,                                // stride
-		(void*)0                          // array buffer offset
-		);
+	if (!ifDepthTexture)
+	{
+		// 2rd attribute buffer : normals
+		glEnableVertexAttribArray(1);
+		glBindBuffer(GL_ARRAY_BUFFER, mColorBuffer);
+		glVertexAttribPointer(
+			1,                                // attribute
+			3,                                // size
+			GL_FLOAT,						  // type
+			GL_FALSE,                         // normalized?
+			0,                                // stride
+			(void*)0                          // array buffer offset
+			);
 
-	// 3rd attribute buffer : normals
-	glEnableVertexAttribArray(2);
-	glBindBuffer(GL_ARRAY_BUFFER, mNormalBuffer);
-	glVertexAttribPointer(
-		2,                                // attribute
-		3,                                // size
-		GL_FLOAT,						  // type
-		GL_FALSE,                         // normalized?
-		0,                                // stride
-		(void*)0                          // array buffer offset
-		);
+		// 3rd attribute buffer : normals
+		glEnableVertexAttribArray(2);
+		glBindBuffer(GL_ARRAY_BUFFER, mNormalBuffer);
+		glVertexAttribPointer(
+			2,                                // attribute
+			3,                                // size
+			GL_FLOAT,						  // type
+			GL_FALSE,                         // normalized?
+			0,                                // stride
+			(void*)0                          // array buffer offset
+			);
 
-	// 3rd attribute buffer : normals
-	glEnableVertexAttribArray(3);
-	glBindBuffer(GL_ARRAY_BUFFER, mUVBuffer);
-	glVertexAttribPointer(
-		3,                                // attribute
-		2,                                // size
-		GL_FLOAT,						  // type
-		GL_FALSE,                         // normalized?
-		0,                                // stride
-		(void*)0                          // array buffer offset
-		);
+		// 3rd attribute buffer : normals
+		glEnableVertexAttribArray(3);
+		glBindBuffer(GL_ARRAY_BUFFER, mUVBuffer);
+		glVertexAttribPointer(
+			3,                                // attribute
+			2,                                // size
+			GL_FLOAT,						  // type
+			GL_FALSE,                         // normalized?
+			0,                                // stride
+			(void*)0                          // array buffer offset
+			);
 
+	}
 	// Index buffer
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
 
@@ -291,8 +294,12 @@ void MeshDrawable::draw()
 	//glDrawArrays(GL_TRIANGLES_ADJACENCY, 0, mVertexArray.size());
 
 	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
-	glDisableVertexAttribArray(2);
+	if (!ifDepthTexture)
+	{
+		glDisableVertexAttribArray(1);
+		glDisableVertexAttribArray(2);
+		glDisableVertexAttribArray(3);
+	}
 }
 
 void MeshDrawable::calculateBBox()

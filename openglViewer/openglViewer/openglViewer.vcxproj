@@ -198,6 +198,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\ColorFragmentShader.fragmentshader" />
+    <None Include="shaders\DepthRTT.fragmentshader" />
+    <None Include="shaders\DepthRTT.vertexshader" />
+    <None Include="shaders\Passthrough.vertexshader" />
+    <None Include="shaders\SimpleTexture.fragmentshader" />
     <None Include="shaders\TransformVertexShader.vertexshader" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

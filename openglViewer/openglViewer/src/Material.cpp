@@ -18,8 +18,8 @@ Material::Material(const char* matName)
 Material::Material(const glm::vec3 & color)
 {
 	mDiffuseColor = color;
-	mAmbientColor = glm::vec3(0.2, 0.2, 0.2)*color;
-	mSpecularColor = glm::vec3(0.5, 0.5, 0.5);
+	mAmbientColor = glm::vec3(0.3, 0.3, 0.3)*color;
+	mSpecularColor = glm::vec3(0.7, 0.7, 0.7);
 	mShininess = 5.0f;
 	mTextureID = 0;
 }

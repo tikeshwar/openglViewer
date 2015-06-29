@@ -157,5 +157,17 @@
     <None Include="shaders\TransformVertexShader.vertexshader">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="shaders\DepthRTT.fragmentshader">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\DepthRTT.vertexshader">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\Passthrough.vertexshader">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\SimpleTexture.fragmentshader">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

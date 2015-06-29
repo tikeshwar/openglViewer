@@ -27,7 +27,7 @@ namespace glv
 		virtual glm::mat4 transform() = 0;
 		virtual void setTransform(const glm::mat4 & mat) = 0;
 
-		virtual void draw() = 0;
+		virtual void draw(bool ifDepthTexture = false) = 0;
 
 	};
 }

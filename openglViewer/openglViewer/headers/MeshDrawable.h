@@ -47,7 +47,7 @@ namespace glv
 		Material material();
 		void setMaterial(const Material & material);
 
-		void draw();
+		void draw(bool ifDepthTexture = false);
 
 	private:
 		void calculateBBox();

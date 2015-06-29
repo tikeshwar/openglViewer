@@ -87,45 +87,13 @@ void Scene::removeLight(const char* lightName)
 
 void Scene::render()
 {
-	// Dark blue background
-	glClearColor(0.3f, 0.3f, 0.3f, 0.0f);
-
-	// Enable depth test
-	glEnable(GL_DEPTH_TEST);
-	// Accept fragment if it closer to the camera than the former one
-	glDepthFunc(GL_LESS);
-
-	GLuint VertexArrayID;
-	glGenVertexArrays(1, &VertexArrayID);
-	glBindVertexArray(VertexArrayID);
-
-	// Create and compile our GLSL program from the shaders
-	GLuint programID = Shaders::LoadShaders("shaders/TransformVertexShader.vertexshader", "shaders/ColorFragmentShader.fragmentshader");
-
-	// Get a handle for our "MVP" uniform
-	glUseProgram(programID);
-	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
-	glUseProgram(programID);
-	GLuint ModelMatrixID = glGetUniformLocation(programID, "M");
-	glUseProgram(programID);
-	GLuint ViewMatrixID = glGetUniformLocation(programID, "V");
-	glUseProgram(programID);
-	GLuint ProjectionMatrixID = glGetUniformLocation(programID, "P");
-	glUseProgram(programID);
-	GLuint NormalMatrixID = glGetUniformLocation(programID, "N");
-	glUseProgram(programID);
-	GLuint ObjectMatrixID = glGetUniformLocation(programID, "OM");
-
-	glUseProgram(programID);
-	GLuint TextureID = glGetUniformLocation(programID, "TextureSampler");
-	glUseProgram(programID);
-	GLuint IsTexAvailable = glGetUniformLocation(programID, "IsTexAvailable");
-
 	mCamera->setWindowSize(mWidth, mHeight);
 	mCamera->setSize(mBBox);
+	mCamera->resetView(Camera::Parallel);	 // need to do coz shadows are created using orthographic
+	mCamera->resetView(Camera::Perspective);
 
 	LightSharedPtr light;
-	if (!mLights.empty())						
+	if (!mLights.empty())
 		light = mLights.begin()->second;
 
 	glfwSetKeyCallback(mWindow, glv::glvKeyCallback);
@@ -133,35 +101,223 @@ void Scene::render()
 	glfwSetMouseButtonCallback(mWindow, glv::glvMouseButtonCallback);
 	glfwSetScrollCallback(mWindow, glv::glvScrollCallback);
 
-	glUseProgram(programID);
+
+	// Dark blue background
+	glClearColor(0.3f, 0.3f, 0.3f, 0.0f);
+
+	// Enable depth test
+	glEnable(GL_DEPTH_TEST);
+	// Accept fragment if it closer to the camera than the former one
+	glDepthFunc(GL_LESS);
+	// Cull triangles which normal is not towards the camera
+	glEnable(GL_CULL_FACE);
+
+	GLuint VertexArrayID;
+	glGenVertexArrays(1, &VertexArrayID);
+	glBindVertexArray(VertexArrayID);
+
+
+	// ---------------------------------------------
+	// Render to Texture - specific code begins here
+	// ---------------------------------------------
+
+	// Create and compile our GLSL program from the shaders
+	GLuint depthProgramID = Shaders::LoadShaders("shaders/DepthRTT.vertexshader", "shaders/DepthRTT.fragmentshader");
+
+	// Get a handle for our "MVP" uniform
+	GLuint depthMatrixID = glGetUniformLocation(depthProgramID, "depthMVP");
+
+	// The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
+	GLuint FramebufferName = 0;
+	glGenFramebuffers(1, &FramebufferName);
+	glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
+
+	// Depth texture. Slower than a depth buffer, but you can sample it later in your shader
+	GLuint depthTexture;
+	glGenTextures(1, &depthTexture);
+	glBindTexture(GL_TEXTURE_2D, depthTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, width(), height(), 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTexture, 0);
+
+	// No color output in the bound framebuffer, only depth.
+	glDrawBuffer(GL_NONE);
+
+	// Always check that our framebuffer is ok
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		return ;
+
+	GLuint quad_VertexArrayID;
+	glGenVertexArrays(1, &quad_VertexArrayID);
+	glBindVertexArray(quad_VertexArrayID);
+	static const GLfloat g_quad_vertex_buffer_data[] = {
+		-1.0f, -1.0f, 0.0f,
+		1.0f, -1.0f, 0.0f,
+		-1.0f, 1.0f, 0.0f,
+		-1.0f, 1.0f, 0.0f,
+		1.0f, -1.0f, 0.0f,
+		1.0f, 1.0f, 0.0f,
+	};
+
+	GLuint quad_vertexbuffer;
+	glGenBuffers(1, &quad_vertexbuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_quad_vertex_buffer_data), g_quad_vertex_buffer_data, GL_STATIC_DRAW);
+
+	// Create and compile our GLSL program from the shaders
+	GLuint quad_programID = glv::Shaders::LoadShaders("shaders/Passthrough.vertexshader", "shaders/SimpleTexture.fragmentshader");
+	GLuint texID = glGetUniformLocation(quad_programID, "texture");
+
+	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	//glViewport(0, 0, width(), height());
+
+	// Create and compile our GLSL program from the shaders
+	GLuint programID = Shaders::LoadShaders("shaders/TransformVertexShader.vertexshader", "shaders/ColorFragmentShader.fragmentshader");
+
+	// Get a handle for our "MVP" uniform
+	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
+	GLuint ModelMatrixID = glGetUniformLocation(programID, "M");
+	GLuint ViewMatrixID = glGetUniformLocation(programID, "V");
+	GLuint ProjectionMatrixID = glGetUniformLocation(programID, "P");
+	GLuint NormalMatrixID = glGetUniformLocation(programID, "N");
+	GLuint ObjectMatrixID = glGetUniformLocation(programID, "OM");
+
+	GLuint TextureID = glGetUniformLocation(programID, "TextureSampler");
+	GLuint IsTexAvailable = glGetUniformLocation(programID, "IsTexAvailable");
+
+	GLuint DepthBiasID = glGetUniformLocation(programID, "DepthBiasMVP");
+	GLuint ShadowMapID = glGetUniformLocation(programID, "shadowMap");
+
 	GLuint LightPosID = glGetUniformLocation(programID, "LightPosition_worldspace");
-	glUseProgram(programID);
 	GLuint LightAmbientID = glGetUniformLocation(programID, "LightAmbientColor");
-	glUseProgram(programID);
 	GLuint LightDiffuseID = glGetUniformLocation(programID, "LightDiffuseColor");
-	glUseProgram(programID);
 	GLuint LightSpecularID = glGetUniformLocation(programID, "LightSpecularColor");
 
-	glUseProgram(programID);
 	GLuint MatAmbientID = glGetUniformLocation(programID, "MatAmbientColor");
-	glUseProgram(programID);
 	GLuint MatDiffuseID = glGetUniformLocation(programID, "MatDiffuseColor");
-	glUseProgram(programID);
 	GLuint MatSpecularID = glGetUniformLocation(programID, "MatSpecularColor");
-	glUseProgram(programID);
 	GLuint MatShininessID = glGetUniformLocation(programID, "MatShininess");
 
-	glUseProgram(programID);
 	GLuint BBoxID = glGetUniformLocation(programID, "Scene_center");
 	glm::vec3 bboxCenter = mBBox.center();
 	glUniform3f(BBoxID, bboxCenter.x, bboxCenter.y, bboxCenter.z);
 
 	do{
+		// Use our shader
+		glUseProgram(depthProgramID);
+
+		// Render to our framebuffer
+		glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
+		glViewport(0, 0, width(), height()); // Render on the whole framebuffer, complete from the lower left corner to the upper right
+
+		// We don't use bias in the shader, but instead we draw back faces, 
+		// which are already separated from the front faces by a small distance 
+		// (if your geometry is made this way)
+		//glEnable(GL_CULL_FACE);
+		//glCullFace(GL_FRONT); // Cull back-facing triangles -> draw only front-facing triangles
+
+		// Clear the screen
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+		glm::mat4 depthMVP;
+		double zoomFactor = mCamera->zoomfactor();
+		//if (Camera::ProjectionType::Perspective == mCamera->projectionType())
+		//{
+		//	double frustum[6];
+		//	mCamera->frustumProjection(&frustum[0]);
+		//	glm::mat4 projectionMatrix = glm::frustum(frustum[0] * zoomFactor, frustum[1] * zoomFactor, frustum[2] * zoomFactor, frustum[3] * zoomFactor, frustum[4], frustum[5]);
+		//	//glm::mat4 projectionMatrix = glm::mat4(1.0);
+
+		//	// Camera matrix
+		//	glm::mat4 viewMatrix = glm::lookAt(light->position(), mCamera->lookAt(), mCamera->upVector());
+		//	glm::mat4 modelMatrix = glm::mat4(1.0);
+
+		//	// Our ModelViewProjection : multiplication of our 3 matrices
+		//	depthMVP = projectionMatrix * viewMatrix * modelMatrix; // Remember, matrix multiplication is the other way around
+		//
+		//}
+		//else if (Camera::ProjectionType::Parallel == mCamera->projectionType())
+		{
+			double ortho[6];
+			mCamera->orthoProjection(&ortho[0]);
+			glm::mat4 projectionMatrix = glm::ortho(ortho[0] * zoomFactor, ortho[1] * zoomFactor, ortho[2] * zoomFactor, ortho[3] * zoomFactor, ortho[4], ortho[5]);
+			// Camera matrix
+			glm::mat4 viewMatrix = glm::lookAt(light->position(), mCamera->lookAt(), mCamera->upVector());
+			glm::mat4 modelMatrix = glm::mat4(1.0);
+			// Our ModelViewProjection : multiplication of our 3 matrices
+			depthMVP = projectionMatrix * viewMatrix * modelMatrix; // Remember, matrix multiplication is the other way around
+		}
+
+		/*
+		glm::vec3 lightinvdir = glm::vec3(0.5f, 2, 2);
+
+		// compute the mvp matrix from the light's point of view
+		glm::mat4 depthprojectionmatrix = glm::ortho<float>(-10, 10, -10, 10, -10, 20);
+		glm::mat4 depthviewmatrix = glm::lookat(lightinvdir, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+		// or, for spot light :
+		//glm::vec3 lightpos(5, 20, 20);
+		//glm::mat4 depthprojectionmatrix = glm::perspective<float>(45.0f, 1.0f, 2.0f, 50.0f);
+		//glm::mat4 depthviewmatrix = glm::lookat(lightpos, lightpos-lightinvdir, glm::vec3(0,1,0));
+
+		glm::mat4 depthmodelmatrix = glm::mat4(1.0);
+		glm::mat4 depthmvp = depthprojectionmatrix * depthviewmatrix * depthmodelmatrix; */
+
+		// Send our transformation to the currently bound shader, 
+		// in the "MVP" uniform
+		glUniformMatrix4fv(depthMatrixID, 1, GL_FALSE, &depthMVP[0][0]);
+
+		mRootNode->traverse([&](const DrawableNodeSharedPtr & node)
+		{
+			if (node->data()->isVisible())
+			{
+				glUniformMatrix4fv(ObjectMatrixID, 1, GL_FALSE, &(node->data()->transform())[0][0]);
+				node->data()->draw();
+			}
+		});
+
+		//glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, width(), height(), 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+		//glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTexture, 0);
+		//glDrawBuffer(GL_NONE);
+
+		// Render to the screen
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(0, 0, width(), height()); // Render on the whole framebuffer, complete from the lower left corner to the upper right
+
+		//glEnable(GL_CULL_FACE);
+		//glCullFace(GL_BACK); // Cull back-facing triangles -> draw only front-facing triangles
+
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// The fullscreen quad's FBO
+
+		// Use our shader
+
+		glUseProgram(programID);
+
 		glm::mat4 MVP = mCamera->MVP();
 		glm::mat4 modelMatrix = mCamera->modelMatrix();
 		glm::mat4 viewMatrix = mCamera->viewMatrix();
 		glm::mat4 projectionMatrix = mCamera->projectionMatrix();
 		glm::mat4 normalMatrix = mCamera->normalMatrix();
+
+		glm::mat4 biasMatrix(
+			0.5, 0.0, 0.0, 0.0,
+			0.0, 0.5, 0.0, 0.0,
+			0.0, 0.0, 0.5, 0.0,
+			0.5, 0.5, 0.5, 1.0
+			);
+
+		glm::mat4 depthBiasMVP = biasMatrix*depthMVP;
+		//glm::mat4 depthBiasMVP = depthMVP;
+		glUniformMatrix4fv(DepthBiasID, 1, GL_FALSE, &depthBiasMVP[0][0]);
+
 
 		//glm::vec4 camPosition = glm::inverse(viewMatrix * modelMatrix) * glm::vec4(mCamera->position().x, mCamera->position().y, mCamera->position().z, 0);
 		// Clear the screen
@@ -177,7 +333,7 @@ void Scene::render()
 
 		if (light)
 		{
-			light->setPosition(mCamera->position());
+			//light->setPosition(mCamera->position());
 			glUseProgram(programID);
 			glUniform3f(LightPosID, light->position().x, light->position().y, light->position().z);
 			glUniform3f(LightAmbientID, light->ambientColor().x, light->ambientColor().y, light->ambientColor().z);
@@ -211,9 +367,43 @@ void Scene::render()
 					glUniform1i(TextureID, 0);
 				}
 
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, depthTexture);
+				glUniform1i(ShadowMapID, 1);
+
 				node->data()->draw();
 			}
 		});
+
+
+
+		glViewport(0, 0, width()/3, height()/3);
+		glUseProgram(quad_programID);
+
+		// Bind our texture in Texture Unit 0
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, depthTexture);
+		// Set our "renderedTexture" sampler to user Texture Unit 0
+		glUniform1i(texID, 0);
+
+		// 1rst attribute buffer : vertices
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
+		glVertexAttribPointer(
+			0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+			3,                  // size
+			GL_FLOAT,           // type
+			GL_FALSE,           // normalized?
+			0,                  // stride
+			(void*)0            // array buffer offset
+			);
+
+		//glDisable(GL_COMPARE_R_TO_TEXTURE);
+		// Draw the triangle !
+		// You have to disable GL_COMPARE_R_TO_TEXTURE above in order to see anything !
+		//glDrawArrays(GL_TRIANGLES, 0, 6); // 2*3 indices starting at 0 -> 2 triangles
+		glDisableVertexAttribArray(0);
+
 
 		glfwSwapBuffers(mWindow);
 		glfwPollEvents();
@@ -224,6 +414,11 @@ void Scene::render()
 	// Cleanup VBO and shader
 	glDeleteProgram(programID);
 	glDeleteVertexArrays(1, &VertexArrayID);
+
+	glDeleteProgram(depthProgramID);
+	glDeleteTextures(1, &TextureID);
+	glDeleteFramebuffers(1, &FramebufferName);
+	glDeleteTextures(1, &depthTexture);
 }
 
 void Scene::setWindowSize(int width, int height)

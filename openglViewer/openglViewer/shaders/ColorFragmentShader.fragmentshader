@@ -6,6 +6,7 @@ in vec4 normal_worldspace;
 in vec4 position_worldspace;
 in vec4 lightPosition_worldspace;
 in vec4 scene_center;
+in vec4 ShadowCoord;
 
 uniform vec3 Scene_center;
 uniform vec3 LightPosition_worldspace;
@@ -17,6 +18,7 @@ uniform vec3 MatSpecularColor;
 uniform float MatShininess;
 uniform int IsTexAvailable;
 uniform sampler2D TextureSampler;
+uniform sampler2DShadow shadowMap;
 
 // light - single only :(
 uniform vec3 LightAmbientColor;
@@ -29,6 +31,32 @@ in vec2 UV;
 // Ouput data
 out vec3 color;
 
+vec2 poissonDisk[16] = vec2[]( 
+   vec2( -0.94201624, -0.39906216 ), 
+   vec2( 0.94558609, -0.76890725 ), 
+   vec2( -0.094184101, -0.92938870 ), 
+   vec2( 0.34495938, 0.29387760 ), 
+   vec2( -0.91588581, 0.45771432 ), 
+   vec2( -0.81544232, -0.87912464 ), 
+   vec2( -0.38277543, 0.27676845 ), 
+   vec2( 0.97484398, 0.75648379 ), 
+   vec2( 0.44323325, -0.97511554 ), 
+   vec2( 0.53742981, -0.47373420 ), 
+   vec2( -0.26496911, -0.41893023 ), 
+   vec2( 0.79197514, 0.19090188 ), 
+   vec2( -0.24188840, 0.99706507 ), 
+   vec2( -0.81409955, 0.91437590 ), 
+   vec2( 0.19984126, 0.78641367 ), 
+   vec2( 0.14383161, -0.14100790 ) 
+);
+
+// Returns a random number based on a vec3 and an int.
+float random(vec3 seed, int i){
+	vec4 seed4 = vec4(seed,i);
+	float dot_product = dot(seed4, vec4(12.9898,78.233,45.164,94.673));
+	return fract(sin(dot_product) * 43758.5453);
+}
+
 void main(){
 
 	//gl_FragColor = texture( TextureSampler, UV );return;
@@ -40,7 +68,7 @@ void main(){
 
 	if(IsTexAvailable > 0)
 	{
-		vec4 color = texture( TextureSampler, UV );
+		vec4 color = texture2D( TextureSampler, UV );
 		matDiffuse = color;
 		matAmbient = color*matDiffuse;
 		matSpecular = color;
@@ -53,65 +81,46 @@ void main(){
 	
 	float d = length(lightPosition_worldspace - position_worldspace);
 	float pd = length(scene_center -  lightPosition_worldspace);
-	float lightPower = pow(pd, 2.3);
+	float lightPower = pow(pd, 2.7);
 
 	float cosTheta = clamp( dot( N,L ), 0,1 );
 	float cosAlpha = clamp( dot( E,R ), 0,1 );
 
 	//attenuation
-    float attenuation = 1.0 / (1.0 + + d + pow(d, 2));
+    float attenuation = 1.0 / (1.0 + d + d*d);
 
 	vec4 finalAmbient = vec4(LightAmbientColor,1.0)*matAmbient;
 	vec4 finalDiffuse = vec4(LightDiffuseColor,1.0)*matDiffuse*cosTheta;
 	vec4 finalSpecular = vec4(LightSpecularColor,1.0)*matSpecular*pow(cosAlpha, shininess)*attenuation*lightPower;
 
-    gl_FragColor = finalAmbient + finalDiffuse + finalSpecular;
+	float visibility=1.0;
 
-	//float shininess = 0.05;
-	//float lightPower = 50.0;
-	//vec4 lightColor = vec4(1.0, 1.0, 1.0, 1.0);
-	//
-	//vec4 diffuseColor = vec4(0.0, 0.0, 1.0, 1.0);
-	//vec4 ambientColor = vec4(0.1, 0.1, 0.1, 1.0);
-	//vec4 specularColor = diffuseColor * 0.3;
-	//
-	//vec4 spec = vec4(0.0);
-	//
-	//vec4 lightDir = normalize(lightPosition_worldspace - position_worldspace);
-	//float distance = length(lightPosition_worldspace - position_worldspace );
-	//  
-	//float Idiff = lightPower * dot(normal_worldspace, lightDir)/(distance*distance);
-	//
-	//if(Idiff > 0.0)
-	//{
-	//	vec4 halfVec = normalize(position_worldspace + lightDir);
-	//	float ISpec = max(dot(halfVec, normal_worldspace), 0.0);
-	//	spec = specularColor * pow(ISpec, shininess);
-	//} 
-	//
-	//gl_FragColor = Idiff * diffuseColor * lightColor + ambientColor;
+	// Fixed bias, or...
+	float bias = 0.002;
 
-	//vec3 LightColor = vec3(0,0,1);
-	//float LightPower = 40.0;
-													
-	//// Material properties
-	//vec3 MaterialDiffuseColor = fragmentColor;
-	//vec3 MaterialAmbientColor = vec3(0.1,0.1,0.1) * MaterialDiffuseColor;
-	//vec3 MaterialSpecularColor = fragmentColor * 0.3;
+	// ...variable bias
+	//float bias = 0.001*tan(acos(cosTheta));
+	//bias = clamp(bias, 0,0.01);
 
-	//float cosTheta = clamp( dot( vertexNormal, LightDirection_worldspace ), 0,1 );
+	// Sample the shadow map 4 times
+	for (int i=0;i<4;i++){
+		// use either :
+		//  - Always the same samples.
+		//    Gives a fixed pattern in the shadow, but no noise
+		int index = i;
+		//  - A random sample, based on the pixel's screen location. 
+		//    No banding, but the shadow moves with the camera, which looks weird.
+		// int index = int(16.0*random(gl_FragCoord.xyy, i))%16;
+		//  - A random sample, based on the pixel's position in world space.
+		//    The position is rounded to the millimeter to avoid too much aliasing
+		// int index = int(16.0*random(floor(Position_worldspace.xyz*1000.0), i))%16;
+		
+		// being fully in the shadow will eat up 4*0.2 = 0.8
+		// 0.2 potentially remain, which is quite dark.
+		visibility -= 0.2*(1.0-texture( shadowMap, vec3(ShadowCoord.xy + poissonDisk[index]/700.0,  (ShadowCoord.z-bias)/ShadowCoord.w) ));
+	}
 
-	//// Distance to the light
-	//float distance = length( LightPosition_worldspace - Position_worldspace );
-
-	// Output color = color specified in the vertex shader, 
-	// interpolated between all 3 surrounding vertices
-	//color = 
-		// Ambient : simulates indirect lighting
-		//MaterialAmbientColor +
-		// Diffuse : "color" of the object
-		//MaterialDiffuseColor * LightColor * LightPower ;//* cosTheta / (distance*distance); //+
-		// Specular : reflective highlight, like a mirror
-		//MaterialSpecularColor * LightColor * LightPower * pow(cosAlpha,5) / (distance*distance);
+	gl_FragColor = visibility*(finalAmbient + finalDiffuse + finalSpecular);
+	//gl_FragColor = texture(ShadowMap, UV);
 
 }
