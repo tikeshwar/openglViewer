@@ -7,6 +7,8 @@ MeshDrawable::MeshDrawable()
 {
 	mAutoNormals = false;
 	mIsVisible = true;
+	mToIncludeInBBox = true;
+	mToIncludeInTransform = true;
 	mTransformMat = glm::mat4(1.0);
 }
 
@@ -310,4 +312,34 @@ void MeshDrawable::calculateBBox()
 		bbox.extend(mVertexArray[i], mVertexArray[i + 1], mVertexArray[i + 2]);
 	mGeomBBox = bbox;
 	mGeomPackBBox = bbox;
+}
+
+void MeshDrawable::includeInBBoxCalculation(bool toInclude)
+{
+	mToIncludeInBBox = toInclude;
+}
+
+bool MeshDrawable::ifIncludedInBBoxCalculation()const
+{
+	return mToIncludeInBBox;
+}
+
+bool MeshDrawable::ifIncludedInBBoxCalculation()
+{
+	return mToIncludeInBBox;
+}
+
+void MeshDrawable::includeInSettingTransform(bool toInclude)
+{
+	mToIncludeInTransform = toInclude;
+}
+
+bool MeshDrawable::ifIncludedInSettingTransform()const
+{
+	return mToIncludeInTransform;
+}
+
+bool MeshDrawable::ifIncludedInSettingTransform()
+{
+	return mToIncludeInTransform;
 }

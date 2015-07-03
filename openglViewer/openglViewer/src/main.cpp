@@ -51,7 +51,7 @@ int main()
 	glv::MeshDrawableSharedPtr plyWoodMeshPtr{ std::move(plyWoodMesh) };
 	{
 		glm::vec3 center = plyWoodMeshPtr->geomPackBBox().center();
-		glm::mat4 meshTransform = glm::translate(plyWoodMeshPtr->transform(), glm::vec3(0, 0.0, 0.0f));
+		glm::mat4 meshTransform = glm::translate(plyWoodMeshPtr->transform(), -center);
 		plyWoodMeshPtr->setTransform(meshTransform);
 
 		glv::Material texMaterial;
@@ -72,14 +72,16 @@ int main()
 		//cubeMeshPtr->setMaterial(glv::Material(glm::vec3(1.0, 1.0, 1.0)));
 	}
 
-	auto bendPipeMesh = parser.read("C:/TK/CCTechViewer/CCTechViewer/TestFiles/STL/ASCII/torus.stl", glv::Parser::STL);
+	auto bendPipeMesh = parser.read("C:/TK/CCTechViewer/CCTechViewer/TestFiles/STL/ASCII/plane.stl", glv::Parser::STL);
 	glv::MeshDrawableSharedPtr bendPipeMeshPtr{ std::move(bendPipeMesh) };
 	{
 		glm::vec3 center = bendPipeMeshPtr->geomPackBBox().center();
-		glm::mat4 meshTransform = glm::translate(bendPipeMeshPtr->transform(), glm::vec3(0.5));
+		glm::mat4 meshTransform = glm::translate(bendPipeMeshPtr->transform(), -center);
 		bendPipeMeshPtr->setTransform(meshTransform);
+		bendPipeMeshPtr->includeInBBoxCalculation(false);
+		bendPipeMeshPtr->includeInSettingTransform(false);
 
-		bendPipeMeshPtr->setMaterial(glv::Material(glm::vec3(0.0, 1.0, 0.7)));
+		bendPipeMeshPtr->setMaterial(glv::Material(glm::vec3(1.0, 1.0, 1.0)));
 		//cubeMeshPtr->setMaterial(glv::Material(glm::vec3(1.0, 1.0, 1.0)));
 	}
 

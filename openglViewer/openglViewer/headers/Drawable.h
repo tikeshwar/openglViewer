@@ -27,6 +27,14 @@ namespace glv
 		virtual glm::mat4 transform() = 0;
 		virtual void setTransform(const glm::mat4 & mat) = 0;
 
+		virtual void includeInBBoxCalculation(bool toInclude) = 0;
+		virtual bool ifIncludedInBBoxCalculation()const = 0;
+		virtual bool ifIncludedInBBoxCalculation() = 0;
+
+		virtual void includeInSettingTransform(bool toInclude) = 0;
+		virtual bool ifIncludedInSettingTransform()const = 0;
+		virtual bool ifIncludedInSettingTransform() = 0;
+
 		virtual void draw(bool ifDepthTexture = false) = 0;
 
 	};

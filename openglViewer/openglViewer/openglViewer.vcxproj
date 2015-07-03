@@ -164,10 +164,12 @@
     <ClInclude Include="headers\Material.h" />
     <ClInclude Include="headers\MeshData.h" />
     <ClInclude Include="headers\MeshDrawable.h" />
+    <ClInclude Include="headers\NewFrameEffect.h" />
     <ClInclude Include="headers\NTreeNode.h" />
     <ClInclude Include="headers\Parser.h" />
     <ClInclude Include="headers\Scene.h" />
     <ClInclude Include="headers\Shaders.h" />
+    <ClInclude Include="headers\ShadowEffect.h" />
     <ClInclude Include="headers\Stdafx.h" />
     <ClInclude Include="headers\TextureLoader.h" />
     <ClInclude Include="headers\Typedefs.h" />
@@ -184,9 +186,11 @@
     <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\MeshData.cpp" />
     <ClCompile Include="src\MeshDrawable.cpp" />
+    <ClCompile Include="src\NewFrameEffect.cpp" />
     <ClCompile Include="src\Parser.cpp" />
     <ClCompile Include="src\Scene.cpp" />
     <ClCompile Include="src\Shaders.cpp" />
+    <ClCompile Include="src\ShadowEffect.cpp" />
     <ClCompile Include="src\Stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

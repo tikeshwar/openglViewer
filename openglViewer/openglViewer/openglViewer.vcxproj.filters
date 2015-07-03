@@ -40,6 +40,12 @@
     <Filter Include="Source Files\FreeImage">
       <UniqueIdentifier>{fc709509-5a50-4e22-a14e-8926154ba522}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Effects">
+      <UniqueIdentifier>{6aaa30a9-9f0e-497a-a5c6-0e99091ad902}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Effects">
+      <UniqueIdentifier>{eae14f5e-f607-479e-ba96-6e1cfce83a35}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\extlibs\FreeImage\src\FreeImage.h">
@@ -99,6 +105,12 @@
     <ClInclude Include="headers\Typedefs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="headers\ShadowEffect.h">
+      <Filter>Header Files\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\NewFrameEffect.h">
+      <Filter>Header Files\Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ArcBall.cpp">
@@ -148,6 +160,12 @@
     </ClCompile>
     <ClCompile Include="src\Stdafx.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ShadowEffect.cpp">
+      <Filter>Source Files\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\NewFrameEffect.cpp">
+      <Filter>Source Files\Effects</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

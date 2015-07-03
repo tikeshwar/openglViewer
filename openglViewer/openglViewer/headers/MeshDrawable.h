@@ -49,6 +49,14 @@ namespace glv
 
 		void draw(bool ifDepthTexture = false);
 
+		void includeInBBoxCalculation(bool toInclude);
+		bool ifIncludedInBBoxCalculation()const;
+		bool ifIncludedInBBoxCalculation();
+
+		void includeInSettingTransform(bool toInclude);
+		bool ifIncludedInSettingTransform()const;
+		bool ifIncludedInSettingTransform();
+
 	private:
 		void calculateBBox();
 		void setBufferObject(GLuint* buffer, const void* dataArray, int count, int sizeofData);
@@ -78,6 +86,9 @@ namespace glv
 
 		std::string mName;
 		glv::Material mMaterial;
+
+		bool mToIncludeInBBox;
+		bool mToIncludeInTransform;
 	};
 }
 

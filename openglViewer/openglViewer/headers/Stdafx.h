@@ -37,8 +37,13 @@
 #include "BoundingBox.h"
 #include "Shaders.h"
 #include "Drawable.h"
+#include "Camera.h"
+#include "Typedefs.h"
+
+#include "NewFrameEffect.h"
+#include "ShadowEffect.h"
 
 #include "CallbackRegister.h"
 
-#include "Typedefs.h"
 #include "Utility.h"
+

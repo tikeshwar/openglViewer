@@ -35,7 +35,8 @@ void Utility::traversalUpdateBBox(glv::DrawableNodeSharedPtr node)
 	glv::BoundingBox nodeBox = node->data()->geomPackBBox();
 	node->traverse([&](const DrawableNodeSharedPtr & node)
 	{
-		nodeBox.extend(node->data()->geomPackBBox());
+		if (node->data()->ifIncludedInBBoxCalculation())
+			nodeBox.extend(node->data()->geomPackBBox());
 	});
 
 	node->data()->setGeomPackBBox(nodeBox);
@@ -46,8 +47,11 @@ void Utility::traversalUpdateTransform(glv::DrawableNodeSharedPtr node)
 	glm::mat4 nodeTransform = node->data()->transform();
 	node->traverse([&](const DrawableNodeSharedPtr & node)
 	{
-		glm::mat4 mat = nodeTransform * node->data()->transform();
-		node->data()->setTransform(mat);
+		if (node->data()->ifIncludedInSettingTransform())
+		{
+			glm::mat4 mat = nodeTransform * node->data()->transform();
+			node->data()->setTransform(mat);
+		}
 	});
 }
 
