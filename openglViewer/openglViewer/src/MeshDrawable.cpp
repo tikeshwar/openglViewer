@@ -10,6 +10,7 @@ MeshDrawable::MeshDrawable()
 	mToIncludeInBBox = true;
 	mToIncludeInTransform = true;
 	mTransformMat = glm::mat4(1.0);
+	mName = "default";
 }
 
 MeshDrawable::~MeshDrawable()
@@ -230,8 +231,16 @@ void MeshDrawable::setMaterial(const glv::Material & material)
 	mMaterial = material;
 }
 
-void MeshDrawable::draw(bool ifDepthTexture)
+void MeshDrawable::preDraw(const std::function<void()> & functor)
 {
+	mPreRenderCall = functor;
+}
+
+void MeshDrawable::draw()
+{
+	if (mPreRenderCall)
+		mPreRenderCall();
+
 	// 1rst attribute buffer : vertices
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
@@ -244,45 +253,42 @@ void MeshDrawable::draw(bool ifDepthTexture)
 		(void*)0            // array buffer offset
 		);
 
-	if (!ifDepthTexture)
-	{
-		// 2rd attribute buffer : normals
-		glEnableVertexAttribArray(1);
-		glBindBuffer(GL_ARRAY_BUFFER, mColorBuffer);
-		glVertexAttribPointer(
-			1,                                // attribute
-			3,                                // size
-			GL_FLOAT,						  // type
-			GL_FALSE,                         // normalized?
-			0,                                // stride
-			(void*)0                          // array buffer offset
-			);
+	// 2rd attribute buffer : normals
+	glEnableVertexAttribArray(1);
+	glBindBuffer(GL_ARRAY_BUFFER, mColorBuffer);
+	glVertexAttribPointer(
+		1,                                // attribute
+		3,                                // size
+		GL_FLOAT,						  // type
+		GL_FALSE,                         // normalized?
+		0,                                // stride
+		(void*)0                          // array buffer offset
+		);
 
-		// 3rd attribute buffer : normals
-		glEnableVertexAttribArray(2);
-		glBindBuffer(GL_ARRAY_BUFFER, mNormalBuffer);
-		glVertexAttribPointer(
-			2,                                // attribute
-			3,                                // size
-			GL_FLOAT,						  // type
-			GL_FALSE,                         // normalized?
-			0,                                // stride
-			(void*)0                          // array buffer offset
-			);
+	// 3rd attribute buffer : normals
+	glEnableVertexAttribArray(2);
+	glBindBuffer(GL_ARRAY_BUFFER, mNormalBuffer);
+	glVertexAttribPointer(
+		2,                                // attribute
+		3,                                // size
+		GL_FLOAT,						  // type
+		GL_FALSE,                         // normalized?
+		0,                                // stride
+		(void*)0                          // array buffer offset
+		);
 
-		// 3rd attribute buffer : normals
-		glEnableVertexAttribArray(3);
-		glBindBuffer(GL_ARRAY_BUFFER, mUVBuffer);
-		glVertexAttribPointer(
-			3,                                // attribute
-			2,                                // size
-			GL_FLOAT,						  // type
-			GL_FALSE,                         // normalized?
-			0,                                // stride
-			(void*)0                          // array buffer offset
-			);
+	// 3rd attribute buffer : normals
+	glEnableVertexAttribArray(3);
+	glBindBuffer(GL_ARRAY_BUFFER, mUVBuffer);
+	glVertexAttribPointer(
+		3,                                // attribute
+		2,                                // size
+		GL_FLOAT,						  // type
+		GL_FALSE,                         // normalized?
+		0,                                // stride
+		(void*)0                          // array buffer offset
+		);
 
-	}
 	// Index buffer
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
 
@@ -294,15 +300,19 @@ void MeshDrawable::draw(bool ifDepthTexture)
 		(void*)0           // element array buffer offset
 		);
 
+	if (mPostRenderCall)
+		mPostRenderCall();
 	//glDrawArrays(GL_TRIANGLES_ADJACENCY, 0, mVertexArray.size());
 
 	glDisableVertexAttribArray(0);
-	if (!ifDepthTexture)
-	{
-		glDisableVertexAttribArray(1);
-		glDisableVertexAttribArray(2);
-		glDisableVertexAttribArray(3);
-	}
+	glDisableVertexAttribArray(1);
+	glDisableVertexAttribArray(2);
+	glDisableVertexAttribArray(3);
+}
+
+void MeshDrawable::postDraw(const std::function<void()> & functor)
+{
+	mPostRenderCall = functor;
 }
 
 void MeshDrawable::calculateBBox()

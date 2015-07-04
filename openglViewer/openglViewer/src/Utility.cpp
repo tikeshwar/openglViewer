@@ -33,26 +33,31 @@ void Utility::connect(glv::DrawableNodeSharedPtr parent, glv::DrawableSharedPtr 
 void Utility::traversalUpdateBBox(glv::DrawableNodeSharedPtr node)
 {
 	glv::BoundingBox nodeBox = node->data()->geomPackBBox();
-	node->traverse([&](const DrawableNodeSharedPtr & node)
+	for (auto it = node->begin(); it != node->end(); it++)
 	{
-		if (node->data()->ifIncludedInBBoxCalculation())
-			nodeBox.extend(node->data()->geomPackBBox());
-	});
-
+		(*it)->traverse([&](const DrawableNodeSharedPtr & node)
+		{
+			if (node->data()->ifIncludedInBBoxCalculation())
+				nodeBox.extend(node->data()->geomPackBBox());
+		});
+	}
 	node->data()->setGeomPackBBox(nodeBox);
 }
 
 void Utility::traversalUpdateTransform(glv::DrawableNodeSharedPtr node)
 {
 	glm::mat4 nodeTransform = node->data()->transform();
-	node->traverse([&](const DrawableNodeSharedPtr & node)
+	for (auto it = node->begin(); it != node->end(); it++)
 	{
-		if (node->data()->ifIncludedInSettingTransform())
+		(*it)->traverse([&](const DrawableNodeSharedPtr & node)
 		{
-			glm::mat4 mat = nodeTransform * node->data()->transform();
-			node->data()->setTransform(mat);
-		}
-	});
+			if (node->data()->ifIncludedInSettingTransform())
+			{
+				glm::mat4 mat = nodeTransform * node->data()->transform();
+				node->data()->setTransform(mat);
+			}
+		});
+	}
 }
 
 glv::BoundingBox Utility::updateBBox(const glv::BoundingBox & box, const glm::mat4 & mat)

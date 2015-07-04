@@ -30,7 +30,7 @@ namespace glv
 		void setZoom(double zoomfactor);
 
 		void setWindowSize(int width, int height);
-		void setSize(const BoundingBox & bbox);
+		void setOrtho(const BoundingBox & bbox);
 
 		int setKeyCallback(int x, int y, int key, int action);
 		int setMouseMoveCallback(int x, int y);

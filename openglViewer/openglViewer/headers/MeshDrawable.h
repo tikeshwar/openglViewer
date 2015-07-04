@@ -47,7 +47,9 @@ namespace glv
 		Material material();
 		void setMaterial(const Material & material);
 
-		void draw(bool ifDepthTexture = false);
+		void preDraw(const std::function<void()> & functor);
+		void draw();
+		void postDraw(const std::function<void()> & functor);
 
 		void includeInBBoxCalculation(bool toInclude);
 		bool ifIncludedInBBoxCalculation()const;
@@ -89,6 +91,9 @@ namespace glv
 
 		bool mToIncludeInBBox;
 		bool mToIncludeInTransform;
+
+		std::function<void()> mPreRenderCall;
+		std::function<void()> mPostRenderCall;
 	};
 }
 

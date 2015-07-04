@@ -18,7 +18,7 @@ uniform vec3 MatSpecularColor;
 uniform float MatShininess;
 uniform int IsTexAvailable;
 uniform sampler2D TextureSampler;
-uniform sampler2DShadow shadowMap;
+uniform sampler2D shadowMap;
 
 // light - single only :(
 uniform vec3 LightAmbientColor;
@@ -81,7 +81,7 @@ void main(){
 	
 	float d = length(lightPosition_worldspace - position_worldspace);
 	float pd = length(scene_center -  lightPosition_worldspace);
-	float lightPower = pow(pd,3.2);
+	float lightPower = pow(20,3.2);
 
 	float cosTheta = clamp( dot( N,L ), 0,1 );
 	float cosAlpha = clamp( dot( E,R ), 0,1 );
@@ -93,44 +93,48 @@ void main(){
 	vec4 finalDiffuse = vec4(LightDiffuseColor,1.0)*matDiffuse*cosTheta;
 	vec4 finalSpecular = vec4(LightSpecularColor,1.0)*matSpecular*pow(cosAlpha, shininess)*attenuation*lightPower;
 	
-	float visibility=1.0;
-
-	// Fixed bias, or...
-	float bias = 0.002;
-
-	// ...variable bias
-	//float bias = 0.001*tan(acos(cosTheta));
-	//bias = clamp(bias, 0,0.01);
-
-	// Sample the shadow map 4 times
-	for (int i=0;i<4;i++){
-		// use either :
-		//  - Always the same samples.
-		//    Gives a fixed pattern in the shadow, but no noise
-		int index = i;
-		//  - A random sample, based on the pixel's screen location. 
-		//    No banding, but the shadow moves with the camera, which looks weird.
-		//	int index = int(16.0*random(gl_FragCoord.xyy, i))%16;
-		//  - A random sample, based on the pixel's position in world space.
-		//    The position is rounded to the millimeter to avoid too much aliasing
-		//int index = int(16.0*random(floor(position_worldspace.xyz*1000.0), i))%16;
-		
-		// being fully in the shadow will eat up 4*0.2 = 0.8
-		// 0.2 potentially remain, which is quite dark.
-		visibility -= 0.2*(1.0-texture( shadowMap, vec3(ShadowCoord.xy + poissonDisk[index]/700.0,  (ShadowCoord.z-bias)/ShadowCoord.w) ));
-	}  
+	//float visibility=1.0;
+	//
+	//// Fixed bias, or...
+	//float bias = 0.002;
+	//
+	//// ...variable bias
+	////float bias = 0.001*tan(acos(cosTheta));
+	////bias = clamp(bias, 0,0.01);
+	//
+	//// Sample the shadow map 4 times
+	//for (int i=0;i<4;i++){
+	//	// use either :
+	//	//  - Always the same samples.
+	//	//    Gives a fixed pattern in the shadow, but no noise
+	//	int index = i;
+	//	//  - A random sample, based on the pixel's screen location. 
+	//	//    No banding, but the shadow moves with the camera, which looks weird.
+	//	//	int index = int(16.0*random(gl_FragCoord.xyy, i))%16;
+	//	//  - A random sample, based on the pixel's position in world space.
+	//	//    The position is rounded to the millimeter to avoid too much aliasing
+	//	//int index = int(16.0*random(floor(position_worldspace.xyz*1000.0), i))%16;
+	//	
+	//	// being fully in the shadow will eat up 4*0.2 = 0.8
+	//	// 0.2 potentially remain, which is quite dark.
+	//	visibility -= 0.2*(1.0-texture( shadowMap, vec3(ShadowCoord.xy + poissonDisk[index]/700.0,  (ShadowCoord.z-bias)/ShadowCoord.w) ));
+	//}  
 	
-	//float shadowValue = 0.0;
-	//for(float u = -0.001; u <= 0.001; u+=0.0005)
-	//	for(float v = -0.001; v <= 0.001; v+=0.0005)
-	//	{
-	//		if(texture( shadowMap, vec2(ShadowCoord.xy) + vec2(u,v)).r >= (ShadowCoord.z/ShadowCoord.w))
-	//			 shadowValue+=1.0;
-	//	}
-	// shadowValue /= 16.0;
-
-	//float visibility = texture( shadowMap, vec3(ShadowCoord.xy, (ShadowCoord.z)/ShadowCoord.w) );
-	gl_FragColor = visibility*(finalAmbient + finalDiffuse + finalSpecular);
+	float bias = 0.002;
+	float shadowValue = 0.0;
+	int count = 0;
+	for(float u = -0.05; u <= 0.05; u+=0.005)
+		for(float v = -0.05; v <= 0.05; v+=0.005)
+		{
+			count++;
+			if(texture( shadowMap, vec2(ShadowCoord.xy) + vec2(u,v)).r >= ((ShadowCoord.z - bias)/ShadowCoord.w))
+				 shadowValue+=1.0;
+		}
+	shadowValue /= count;
+	if(shadowValue < 0.25)
+		shadowValue = 0.25;
+	//float visibility = texture( shadowMap, vec3(ShadowCoord.xy, (ShadowCoord.z)/ShadowCoord.w));
+	gl_FragColor = shadowValue*(finalAmbient + finalDiffuse + finalSpecular);
 	//gl_FragColor = texture(ShadowMap, UV);
 
 }

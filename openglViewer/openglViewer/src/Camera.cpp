@@ -58,7 +58,7 @@ void Camera::resetView()
 	setZoom(1.0);
 	mArcBall.setToInitialState();
 	mMVP = mViewMatrix = mModelMatrix = mProjectionMatrix = glm::mat4();
-	setSize(mBBox);
+	setOrtho(mBBox);
 }
 
 void Camera::resetView(ProjectionType projectionType)
@@ -66,13 +66,13 @@ void Camera::resetView(ProjectionType projectionType)
 	if (projectionType == ProjectionType::Parallel)
 	{
 		mProjectionType = ProjectionType::Parallel;
-		setSize(mBBox);
+		setOrtho(mBBox);
 		updateZoom(0, 0);
 	}
 	else if (projectionType == ProjectionType::Perspective)
 	{
 		mProjectionType = ProjectionType::Perspective;
-		setSize(mBBox);
+		setOrtho(mBBox);
 		updateZoom(0, 0);
 	}
 }
@@ -413,23 +413,36 @@ const glm::mat4 & Camera::MVP()const
 	return mMVP;
 }
 
-void Camera::setSize(const BoundingBox & bbox)
+void Camera::setOrtho(const BoundingBox & bbox)
 {
 	mBBox = bbox;
 	if (Camera::ProjectionType::Perspective == mProjectionType)
 	{
 		glm::vec3 center = bbox.center();
 		double distance = 0.5*glm::sqrt(bbox.diagonal().y*bbox.diagonal().y + bbox.diagonal().x + bbox.diagonal().x) / glm::tan(mFieldOfView / 2.0f);
-		mLookAt = glm::vec3(0, 0, 0);
-		mPosition = glm::vec3(mLookAt.x, mLookAt.y, mLookAt.z + distance);
-		mUpVector = glm::vec3(0, 1, 0);
+		
+		double ar = float(mWidth) / mHeight;
+
+		double zNear = 1.0f, zFar = 10000.0f;
+		double w = glm::tan((float)mFieldOfView) * zNear;
+		double h = w / ar;
+
+		mFrustumLeft = -w, mFrustumRight = w;
+		mFrustumBottom = -h, mFrustumTop = h;
+		mFrustumNear = zNear, mFrustumFar = zFar;
+
+
+		//mLookAt = glm::vec3(0, 0, 0);
+		//mPosition = glm::vec3(mLookAt.x, mLookAt.y, mLookAt.z + distance);
+		//mUpVector = glm::vec3(0, 1, 0);
 	}
 	else if (Camera::ProjectionType::Parallel == mProjectionType)
 	{
 		glm::vec3 center = bbox.center();
-		glm::vec3 lower = bbox.lower();
-		glm::vec3 upper = bbox.upper();
-		double distance = glm::sqrt(bbox.diagonal().y*bbox.diagonal().y + bbox.diagonal().x + bbox.diagonal().x);
+		//glm::vec3 lower = bbox.lower();
+		//glm::vec3 upper = bbox.upper();
+		//double distance = glm::sqrt(bbox.diagonal().y*bbox.diagonal().y + bbox.diagonal().x + bbox.diagonal().x);
+		double distance = glm::length(bbox.diagonal());
 
 		double ar = float(mWidth) / mHeight;
 
@@ -440,9 +453,9 @@ void Camera::setSize(const BoundingBox & bbox)
 		mOrthoNear = 0 - 2 * distance;
 		mOrthoFar = 0 + 2 * distance;
 
-		mLookAt = glm::vec3(0, 0, 0);;
-		mPosition = glm::vec3(mLookAt.x, mLookAt.y, mLookAt.z + distance);
-		mUpVector = glm::vec3(0, 1, 0);
+		//mLookAt = glm::vec3(0, 0, 0);;
+		//mPosition = glm::vec3(mLookAt.x, mLookAt.y, mLookAt.z + distance);
+		//mUpVector = glm::vec3(0, 1, 0);
 	}
 	apply();
 }

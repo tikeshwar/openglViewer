@@ -50,6 +50,18 @@ void ShadowEffect::initialize()
 	// Always check that our framebuffer is ok
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		return;
+
+	double zoomFactor = 1.0;
+	double ortho[6];
+	mCamera->orthoProjection(&ortho[0]);
+
+	glm::mat4 projectionMatrix = glm::ortho(ortho[0] * zoomFactor, ortho[1] * zoomFactor, ortho[2] * zoomFactor, ortho[3] * zoomFactor, ortho[4], ortho[5]);
+	// Camera matrix
+	glm::mat4 viewMatrix = glm::lookAt(mLight->position(), mCamera->lookAt(), mCamera->upVector());
+	glm::mat4 modelMatrix = glm::mat4(1.0);
+	// Our ModelViewProjection : multiplication of our 3 matrices
+	mDepthMVPMat = projectionMatrix * viewMatrix * modelMatrix; // Remember, matrix multiplication is the other way around
+
 }
 
 void ShadowEffect::render(glv::DrawableNodeSharedPtr drawableNode)
@@ -64,22 +76,11 @@ void ShadowEffect::render(glv::DrawableNodeSharedPtr drawableNode)
 	// We don't use bias in the shader, but instead we draw back faces, 
 	// which are already separated from the front faces by a small distance 
 	// (if your geometry is made this way)
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK); // Cull back-facing triangles -> draw only front-facing triangles
+/*	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);*/ // Cull back-facing triangles -> draw only front-facing triangles
 
 	// Clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	double zoomFactor = mCamera->zoomfactor();
-	double ortho[6];
-	mCamera->orthoProjection(&ortho[0]);
-
-	glm::mat4 projectionMatrix = glm::ortho(ortho[0] * zoomFactor, ortho[1] * zoomFactor, ortho[2] * zoomFactor, ortho[3] * zoomFactor, ortho[4], ortho[5]);
-	// Camera matrix
-	glm::mat4 viewMatrix = glm::lookAt(mLight->position(), mCamera->lookAt(), mCamera->upVector());
-	glm::mat4 modelMatrix = glm::mat4(1.0);
-	// Our ModelViewProjection : multiplication of our 3 matrices
-	mDepthMVPMat = projectionMatrix * viewMatrix * modelMatrix; // Remember, matrix multiplication is the other way around
 
 	// Send our transformation to the currently bound shader, 
 	// in the "MVP" uniform

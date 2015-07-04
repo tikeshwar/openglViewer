@@ -35,7 +35,9 @@ namespace glv
 		virtual bool ifIncludedInSettingTransform()const = 0;
 		virtual bool ifIncludedInSettingTransform() = 0;
 
-		virtual void draw(bool ifDepthTexture = false) = 0;
+		virtual void preDraw(const std::function<void()> & functor) = 0;
+		virtual void draw() = 0;
+		virtual void postDraw(const std::function<void()> & functor) = 0;
 
 	};
 }

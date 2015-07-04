@@ -5,8 +5,8 @@ using namespace glv;
 
 Scene::Scene()
 {
-	mWidth = 640;
-	mHeight = 480;
+	mWidth = 800;
+	mHeight = 600;
 
 	// Initialise GLFW														    
 	if (!glfwInit())
@@ -89,7 +89,7 @@ void Scene::removeLight(const char* lightName)
 void Scene::render()
 {
 	mCamera->setWindowSize(mWidth, mHeight);
-	mCamera->setSize(mBBox);
+	mCamera->setOrtho(mBBox);
 	mCamera->resetView(Camera::Parallel);	 // need to do coz shadows are created using orthographic
 	mCamera->resetView(Camera::Perspective);
 
@@ -166,7 +166,8 @@ void Scene::render()
 
 		glUseProgram(programID);
 
-		glDisable(GL_CULL_FACE);
+		//glEnable(GL_CULL_FACE);
+		//glCullFace(GL_BACK);
 
 		glm::mat4 MVP = mCamera->MVP();
 		glm::mat4 modelMatrix = mCamera->modelMatrix();
@@ -243,7 +244,8 @@ void Scene::render()
 			}
 		});
 
-		//quadTexture.render(shadowEffect.depthTexture(), 100, 100, width() / 3, height() / 3);
+
+		//quadTexture.render(shadowEffect.depthTexture(), 0, 0, width() / 3, height() / 3);
 
 		glfwSwapBuffers(mWindow);
 		glfwPollEvents();

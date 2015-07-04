@@ -11,11 +11,11 @@ int main()
 {
 	gScene = make_shared<glv::Scene>();
 
-	auto light = make_shared<glv::Light>("default", glm::vec3(1.0), glm::vec3(2.0, 2.0, 2.0));
+	auto light = make_shared<glv::Light>("default", glm::vec3(1.0), glm::vec3(75, 75, 50.0));
 	gScene->addLight(light);
 
 	auto camera = make_shared<glv::Camera>();
-	camera->setPosition(0, 0, -5);
+	camera->setPosition(100, 100, 100);
 	camera->setUpVector(0, 1, 0);
 	camera->setLookAt(0, 0, 0);
 	gScene->addCamera(camera);
@@ -47,7 +47,7 @@ int main()
 	//cubeMeshPtr->setMaterial(glv::Material(glm::vec3(1.0, 1.0, 1.0)));
 	}
 	*/
-	auto plyWoodMesh = parser.read("C:/TK/CCTechViewer/CCTechViewer/TestFiles/STL/ASCII/plywood.stl", glv::Parser::STL);
+	auto plyWoodMesh = parser.read("C:/TK/CCTechViewer/CCTechViewer/TestFiles/STL/ASCII/Tron_bunny/tron_bunny_v2.stl", glv::Parser::STL);
 	glv::MeshDrawableSharedPtr plyWoodMeshPtr{ std::move(plyWoodMesh) };
 	{
 		glm::vec3 center = plyWoodMeshPtr->geomPackBBox().center();
@@ -75,23 +75,30 @@ int main()
 	auto bendPipeMesh = parser.read("C:/TK/CCTechViewer/CCTechViewer/TestFiles/STL/ASCII/plane.stl", glv::Parser::STL);
 	glv::MeshDrawableSharedPtr bendPipeMeshPtr{ std::move(bendPipeMesh) };
 	{
-		glm::vec3 center = bendPipeMeshPtr->geomPackBBox().center();
+		glm::vec3 center = plyWoodMeshPtr->geomPackBBox().center();
+		center.y = -plyWoodMeshPtr->geomPackBBox().lower().y;
 		glm::mat4 meshTransform = glm::translate(bendPipeMeshPtr->transform(), -center);
 		bendPipeMeshPtr->setTransform(meshTransform);
 		bendPipeMeshPtr->includeInBBoxCalculation(false);
 		bendPipeMeshPtr->includeInSettingTransform(false);
 
-		bendPipeMeshPtr->setMaterial(glv::Material(glm::vec3(1.0, 1.0, 1.0)));
-		//cubeMeshPtr->setMaterial(glv::Material(glm::vec3(1.0, 1.0, 1.0)));
+		bendPipeMeshPtr->setMaterial(glv::Material("AllWhite",glm::vec3(1.0, 1.0, 1.0), glm::vec3(1.0, 1.0, 1.0), glm::vec3(1.0, 1.0, 1.0)));
+		bendPipeMeshPtr->preDraw([](){
+			glEnable(GL_CULL_FACE);
+			glCullFace(GL_BACK);
+		});
+		bendPipeMeshPtr->postDraw([](){
+			glDisable(GL_CULL_FACE);
+		});
 	}
 
 	glv::Utility util;
 
 	auto rootdsp = util.getDrawableNode(plyWoodMeshPtr);
-	auto childdsp1 = util.getDrawableNode(lightMeshPtr);
+	//auto childdsp1 = util.getDrawableNode(lightMeshPtr);
 	auto childdsp2 = util.getDrawableNode(bendPipeMeshPtr);
 
-	util.connect(rootdsp, childdsp1);
+	//util.connect(rootdsp, childdsp1);
 	util.connect(rootdsp, childdsp2);
 
 	gScene->addDrawableNode(rootdsp);
