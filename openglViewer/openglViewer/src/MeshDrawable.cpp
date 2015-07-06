@@ -9,6 +9,7 @@ MeshDrawable::MeshDrawable()
 	mIsVisible = true;
 	mToIncludeInBBox = true;
 	mToIncludeInTransform = true;
+	mToIncludeInShadow = true;
 	mTransformMat = glm::mat4(1.0);
 	mName = "default";
 }
@@ -231,16 +232,8 @@ void MeshDrawable::setMaterial(const glv::Material & material)
 	mMaterial = material;
 }
 
-void MeshDrawable::preDraw(const std::function<void()> & functor)
+void MeshDrawable::setupDraw()
 {
-	mPreRenderCall = functor;
-}
-
-void MeshDrawable::draw()
-{
-	if (mPreRenderCall)
-		mPreRenderCall();
-
 	// 1rst attribute buffer : vertices
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
@@ -291,6 +284,19 @@ void MeshDrawable::draw()
 
 	// Index buffer
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
+}
+
+void MeshDrawable::preDraw(const std::function<void()> & functor)
+{
+	mPreRenderCall = functor;
+}
+
+void MeshDrawable::draw()
+{
+	if (mPreRenderCall != nullptr)
+		mPreRenderCall();
+
+	setupDraw();
 
 	// Draw the triangles !
 	glDrawElements(
@@ -300,7 +306,7 @@ void MeshDrawable::draw()
 		(void*)0           // element array buffer offset
 		);
 
-	if (mPostRenderCall)
+	if (mPostRenderCall != nullptr)
 		mPostRenderCall();
 	//glDrawArrays(GL_TRIANGLES_ADJACENCY, 0, mVertexArray.size());
 
@@ -352,4 +358,19 @@ bool MeshDrawable::ifIncludedInSettingTransform()const
 bool MeshDrawable::ifIncludedInSettingTransform()
 {
 	return mToIncludeInTransform;
+}
+
+void MeshDrawable::includeInShadowCalculation(bool toInclude)
+{
+	mToIncludeInShadow = toInclude;
+}
+
+bool MeshDrawable::ifIncludedInShadowCalculation()const
+{
+	return mToIncludeInShadow;
+}
+
+bool MeshDrawable::ifIncludedInShadowCalculation()
+{
+	return mToIncludeInShadow;
 }

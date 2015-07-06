@@ -19,6 +19,7 @@ uniform float MatShininess;
 uniform int IsTexAvailable;
 uniform sampler2D TextureSampler;
 uniform sampler2D shadowMap;
+//uniform sampler2DShadow shadowMapbool;
 
 // light - single only :(
 uniform vec3 LightAmbientColor;
@@ -123,18 +124,18 @@ void main(){
 	float bias = 0.002;
 	float shadowValue = 0.0;
 	int count = 0;
-	for(float u = -0.05; u <= 0.05; u+=0.005)
-		for(float v = -0.05; v <= 0.05; v+=0.005)
+	for(float u = -bias*10; u <= bias*10; u+=bias)
+		for(float v = -bias*10; v <= bias*10; v+=bias)
 		{
 			count++;
 			if(texture( shadowMap, vec2(ShadowCoord.xy) + vec2(u,v)).r >= ((ShadowCoord.z - bias)/ShadowCoord.w))
-				 shadowValue+=1.0;
+			{
+				 shadowValue += 1.0;
+			}
 		}
 	shadowValue /= count;
 	if(shadowValue < 0.25)
 		shadowValue = 0.25;
-	//float visibility = texture( shadowMap, vec3(ShadowCoord.xy, (ShadowCoord.z)/ShadowCoord.w));
-	gl_FragColor = shadowValue*(finalAmbient + finalDiffuse + finalSpecular);
-	//gl_FragColor = texture(ShadowMap, UV);
 
+	gl_FragColor = shadowValue*(finalAmbient + finalDiffuse + finalSpecular);
 }

@@ -5,8 +5,8 @@ using namespace glv;
 
 Scene::Scene()
 {
-	mWidth = 800;
-	mHeight = 600;
+	mWidth = 640;
+	mHeight = 480;
 
 	// Initialise GLFW														    
 	if (!glfwInit())
@@ -90,8 +90,8 @@ void Scene::render()
 {
 	mCamera->setWindowSize(mWidth, mHeight);
 	mCamera->setOrtho(mBBox);
-	mCamera->resetView(Camera::Parallel);	 // need to do coz shadows are created using orthographic
-	mCamera->resetView(Camera::Perspective);
+	//mCamera->resetView(Camera::Parallel);	 // need to do coz shadows are created using orthographic
+	//mCamera->resetView(Camera::Perspective);
 
 	LightSharedPtr light;
 	if (!mLights.empty())
@@ -156,6 +156,7 @@ void Scene::render()
 	GLuint BBoxID = glGetUniformLocation(programID, "Scene_center");
 	glm::vec3 bboxCenter = mBBox.center();
 	glUniform3f(BBoxID, bboxCenter.x, bboxCenter.y, bboxCenter.z);
+
 
 	do{
 
@@ -245,7 +246,7 @@ void Scene::render()
 		});
 
 
-		//quadTexture.render(shadowEffect.depthTexture(), 0, 0, width() / 3, height() / 3);
+		quadTexture.render(shadowEffect.depthTexture(), 0, 0, width() / 3, height() / 3);
 
 		glfwSwapBuffers(mWindow);
 		glfwPollEvents();

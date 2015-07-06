@@ -21,6 +21,9 @@ namespace glv{
 	private:
 
 		std::unique_ptr<MeshDrawable> readStl(const char* file);
+		bool isStlAscii(const char* file)const;
+		std::shared_ptr<MeshData> readStlAscii(const char* file)const;
+		std::shared_ptr<MeshData> readStlBinary(const char* file)const;
 
 	};
 }

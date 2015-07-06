@@ -51,16 +51,7 @@ void ShadowEffect::initialize()
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		return;
 
-	double zoomFactor = 1.0;
-	double ortho[6];
-	mCamera->orthoProjection(&ortho[0]);
 
-	glm::mat4 projectionMatrix = glm::ortho(ortho[0] * zoomFactor, ortho[1] * zoomFactor, ortho[2] * zoomFactor, ortho[3] * zoomFactor, ortho[4], ortho[5]);
-	// Camera matrix
-	glm::mat4 viewMatrix = glm::lookAt(mLight->position(), mCamera->lookAt(), mCamera->upVector());
-	glm::mat4 modelMatrix = glm::mat4(1.0);
-	// Our ModelViewProjection : multiplication of our 3 matrices
-	mDepthMVPMat = projectionMatrix * viewMatrix * modelMatrix; // Remember, matrix multiplication is the other way around
 
 }
 
@@ -68,6 +59,34 @@ void ShadowEffect::render(glv::DrawableNodeSharedPtr drawableNode)
 {
 	// Use our shader
 	glUseProgram(mShaderProgram);
+
+	if (mCamera->projectionType() == Camera::ProjectionType::Parallel)
+	{
+		double zoomFactor = 1.0;
+		double ortho[6];
+		mCamera->orthoProjection(&ortho[0]);
+
+		glm::mat4 projectionMatrix = glm::ortho(ortho[0] * zoomFactor, ortho[1] * zoomFactor, ortho[2] * zoomFactor, ortho[3] * zoomFactor, ortho[4], ortho[5]);
+		// Camera matrix
+		glm::mat4 viewMatrix = glm::lookAt(mLight->position(), mCamera->lookAt(), mCamera->upVector());
+		glm::mat4 modelMatrix = glm::mat4(1.0);
+		// Our ModelViewProjection : multiplication of our 3 matrices
+		mDepthMVPMat = projectionMatrix * viewMatrix * modelMatrix; // Remember, matrix multiplication is the other way around
+	}
+	else
+	{
+		double zoomFactor = 1.0;
+		double frustum[6];
+		mCamera->frustumProjection(&frustum[0]);
+
+		glm::mat4 projectionMatrix = glm::frustum(frustum[0] * zoomFactor, frustum[1] * zoomFactor, frustum[2] * zoomFactor, frustum[3] * zoomFactor, frustum[4], frustum[5]);
+		// Camera matrix
+		glm::mat4 viewMatrix = glm::lookAt(mLight->position(), mCamera->lookAt(), mCamera->upVector());
+		glm::mat4 modelMatrix = glm::mat4(1.0);
+		// Our ModelViewProjection : multiplication of our 3 matrices
+		mDepthMVPMat = projectionMatrix * viewMatrix * modelMatrix; // Remember, matrix multiplication is the other way around
+	}
+
 
 	// Render to our framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, mFrameBuffer);
@@ -88,7 +107,7 @@ void ShadowEffect::render(glv::DrawableNodeSharedPtr drawableNode)
 
 	drawableNode->traverse([&](const DrawableNodeSharedPtr & node)
 	{
-		if (node->data()->isVisible())
+		if (node->data()->isVisible() && node->data()->ifIncludedInShadowCalculation())
 		{
 			glm::mat4 & nodeMat4 = node->data()->transform();
 			glUniformMatrix4fv(mNodeTransform, 1, GL_FALSE, &nodeMat4[0][0]);

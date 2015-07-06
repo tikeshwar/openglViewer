@@ -16,6 +16,15 @@ namespace glv
 
 		~MeshData();
 
+		bool isIndexed()const
+		{
+			return mIsIndexed;
+		}
+		bool isIndexed()
+		{
+			return 	mIsIndexed;
+		}
+
 		void createNonIndexedMesh(MeshData & outPutMesh);
 		void createIndexedMesh(MeshData & outPutMesh);
 
@@ -29,6 +38,8 @@ namespace glv
 		std::vector<glm::vec3> normalArray;
 		std::vector<glm::vec3> colorArray;
 		std::vector<glm::vec2> uvArray;
+
+		bool mIsIndexed;
 	};
 }
 

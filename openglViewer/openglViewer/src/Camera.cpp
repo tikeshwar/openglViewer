@@ -450,8 +450,8 @@ void Camera::setOrtho(const BoundingBox & bbox)
 		mOrthoRight = 0 + distance;
 		mOrthoTop = 0 + distance / ar;
 		mOrthoBottom = 0 - distance / ar;
-		mOrthoNear = 0 - 2 * distance;
-		mOrthoFar = 0 + 2 * distance;
+		mOrthoNear = 0 -  distance*20;
+		mOrthoFar = 0 + distance*20;
 
 		//mLookAt = glm::vec3(0, 0, 0);;
 		//mPosition = glm::vec3(mLookAt.x, mLookAt.y, mLookAt.z + distance);

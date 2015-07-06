@@ -4,6 +4,7 @@
 using namespace glv;
 
 MeshData::MeshData()
+: mIsIndexed(true)
 {
 }
 
@@ -12,6 +13,7 @@ MeshData::MeshData(std::vector<glm::vec3> & vertexArray,
 	std::vector<glm::vec3> & normalArray,
 	std::vector<glm::vec3> & colorArray,
 	std::vector<glm::vec2> & uvArray)
+	: mIsIndexed(true)
 {
 	this->vertexArray = vertexArray;
 	this->indexArray = indexArray;
@@ -26,6 +28,7 @@ MeshData::~MeshData()
 
 void MeshData::createNonIndexedMesh(MeshData & outPutMesh)
 {
+	mIsIndexed = false;
 	outPutMesh.vertexArray.assign(vertexArray.begin(), vertexArray.end());
 
 	outPutMesh.indexArray.resize(vertexArray.size() / 3);
@@ -51,6 +54,8 @@ void MeshData::createNonIndexedMesh(MeshData & outPutMesh)
 
 void MeshData::createIndexedMesh(MeshData & outPutMesh)
 {
+	mIsIndexed = true;
+
 	createIndexes(outPutMesh);
 
 	std::map<unsigned int, glm::vec3 > vertex2NormalMap;
