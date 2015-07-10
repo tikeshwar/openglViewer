@@ -7,6 +7,8 @@ Scene::Scene()
 {
 	mWidth = 640;
 	mHeight = 480;
+	mIsReflectionEnabled = true;
+	mIsShadowEnabled = true;
 
 	// Initialise GLFW														    
 	if (!glfwInit())
@@ -41,7 +43,8 @@ Scene::Scene()
 }
 
 Scene::Scene(int width, int height)
-:mWidth(width), mHeight(height)
+: mWidth(width)
+, mHeight(height)
 {
 	Scene();
 }
@@ -113,140 +116,48 @@ void Scene::render()
 	// Cull triangles which normal is not towards the camera
 	glEnable(GL_CULL_FACE);
 
-	// ---------------------------------------------
-	// Render to Texture - specific code begins here for shadow
-	// ---------------------------------------------
+	glv::NormalSceneEffect normalSceneEffect(mCamera, light, width(), height());
+	normalSceneEffect.initialize();
 
 	glv::ShadowEffect shadowEffect(light, mCamera, width(), height());
 	shadowEffect.initialize();
 
+	const glm::vec4 reflectionPlane(0, 0, 1, -mBBox.lower().z);
+	glv::ReflectionEffect reflectionEffect(reflectionPlane, mCamera, light, width(), height());
+	reflectionEffect.initialize();
+
 	glv::NewFrameEffect quadTexture;
 	quadTexture.initialize();
 
-	//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	//glViewport(0, 0, width(), height());
-
-	// Create and compile our GLSL program from the shaders
-	GLuint programID = Shaders::LoadShaders("shaders/TransformVertexShader.vertexshader", "shaders/ColorFragmentShader.fragmentshader");
-
-	// Get a handle for our "MVP" uniform
-	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
-	GLuint ModelMatrixID = glGetUniformLocation(programID, "M");
-	GLuint ViewMatrixID = glGetUniformLocation(programID, "V");
-	GLuint ProjectionMatrixID = glGetUniformLocation(programID, "P");
-	GLuint NormalMatrixID = glGetUniformLocation(programID, "N");
-	GLuint ObjectMatrixID = glGetUniformLocation(programID, "OM");
-
-	GLuint TextureID = glGetUniformLocation(programID, "TextureSampler");
-	GLuint IsTexAvailable = glGetUniformLocation(programID, "IsTexAvailable");
-
-	GLuint DepthBiasID = glGetUniformLocation(programID, "DepthBiasMVP");
-	GLuint ShadowMapID = glGetUniformLocation(programID, "shadowMap");
-
-	GLuint LightPosID = glGetUniformLocation(programID, "LightPosition_worldspace");
-	GLuint LightAmbientID = glGetUniformLocation(programID, "LightAmbientColor");
-	GLuint LightDiffuseID = glGetUniformLocation(programID, "LightDiffuseColor");
-	GLuint LightSpecularID = glGetUniformLocation(programID, "LightSpecularColor");
-
-	GLuint MatAmbientID = glGetUniformLocation(programID, "MatAmbientColor");
-	GLuint MatDiffuseID = glGetUniformLocation(programID, "MatDiffuseColor");
-	GLuint MatSpecularID = glGetUniformLocation(programID, "MatSpecularColor");
-	GLuint MatShininessID = glGetUniformLocation(programID, "MatShininess");
-
-	GLuint BBoxID = glGetUniformLocation(programID, "Scene_center");
-	glm::vec3 bboxCenter = mBBox.center();
-	glUniform3f(BBoxID, bboxCenter.x, bboxCenter.y, bboxCenter.z);
-
-
 	do{
 
+		glEnable(GL_CLIP_DISTANCE0);
+
 		// first grab shadow from light POV
+		shadowEffect.bindBuffer();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		shadowEffect.render(mRootNode);
 
-		// Use our shader
-
-		glUseProgram(programID);
-
-		//glEnable(GL_CULL_FACE);
-		//glCullFace(GL_BACK);
-
-		glm::mat4 MVP = mCamera->MVP();
-		glm::mat4 modelMatrix = mCamera->modelMatrix();
-		glm::mat4 viewMatrix = mCamera->viewMatrix();
-		glm::mat4 projectionMatrix = mCamera->projectionMatrix();
-		glm::mat4 normalMatrix = mCamera->normalMatrix();
-
-		glm::mat4 biasMatrix(
-			0.5, 0.0, 0.0, 0.0,
-			0.0, 0.5, 0.0, 0.0,
-			0.0, 0.0, 0.5, 0.0,
-			0.5, 0.5, 0.5, 1.0
-			);
-
-		glm::mat4 depthBiasMVP = biasMatrix*shadowEffect.depthMVP();
-		//glm::mat4 depthBiasMVP = depthMVP;
-		glUniformMatrix4fv(DepthBiasID, 1, GL_FALSE, &depthBiasMVP[0][0]);
-
-
-		//glm::vec4 camPosition = glm::inverse(viewMatrix * modelMatrix) * glm::vec4(mCamera->position().x, mCamera->position().y, mCamera->position().z, 0);
-		// Clear the screen
+		// render it to reflection frame buffer
+		reflectionEffect.bindBuffer();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		reflectionEffect.render(mRootNode);
 
-		// Use our shader
-		glUseProgram(programID);
-		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
-		glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &modelMatrix[0][0]);
-		glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &viewMatrix[0][0]);
-		glUniformMatrix4fv(ProjectionMatrixID, 1, GL_FALSE, &projectionMatrix[0][0]);
-		glUniformMatrix4fv(NormalMatrixID, 1, GL_FALSE, &normalMatrix[0][0]);
+		normalSceneEffect.bindBuffer();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		if (mIsShadowEnabled)
+			normalSceneEffect.renderWithShadow(mRootNode, shadowEffect);
+		if (mIsReflectionEnabled)
+			normalSceneEffect.renderWithReflection(mRootNode, reflectionEffect);
+		if (!mIsShadowEnabled && !mIsReflectionEnabled)
+			normalSceneEffect.render(mRootNode);
 
-		if (light)
-		{
-			//light->setPosition(mCamera->position());
-			glUseProgram(programID);
-			glUniform3f(LightPosID, light->position().x, light->position().y, light->position().z);
-			glUniform3f(LightAmbientID, light->ambientColor().x, light->ambientColor().y, light->ambientColor().z);
-			glUniform3f(LightDiffuseID, light->diffuseColor().x, light->diffuseColor().y, light->diffuseColor().z);
-			glUniform3f(LightSpecularID, light->specularColor().x, light->specularColor().y, light->specularColor().z);
-		}
+		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//quadTexture.bindBuffer();
+		//quadTexture.render(shadowEffect.depthTexture(), 0, 0, width() / 3, height() / 3);
 
-		mRootNode->traverse([&](const DrawableNodeSharedPtr & node)
-		{
-			if (node->data()->isVisible())
-			{
-				glm::mat4 & nodeMat4 = node->data()->transform();
-				glUniformMatrix4fv(ObjectMatrixID, 1, GL_FALSE, &nodeMat4[0][0]);
-
-				const glv::Material	& nodeMat = (std::dynamic_pointer_cast<MeshDrawable>(node->data()))->material();
-				glUniform3f(MatAmbientID, nodeMat.ambientColor().x, nodeMat.ambientColor().y, nodeMat.ambientColor().z);
-				glUniform3f(MatDiffuseID, nodeMat.diffuseColor().x, nodeMat.diffuseColor().y, nodeMat.diffuseColor().z);
-				glUniform3f(MatSpecularID, nodeMat.specularColor().x, nodeMat.specularColor().y, nodeMat.specularColor().z);
-				glUniform1f(MatShininessID, nodeMat.shininess());
-
-				if (nodeMat.textureID())
-					glUniform1i(IsTexAvailable, 1);
-				else
-					glUniform1i(IsTexAvailable, 0);
-
-				if (nodeMat.textureID() > 0)
-				{
-					// Bind our texture in Texture Unit 0
-					glActiveTexture(GL_TEXTURE0);
-					// Set our "myTextureSampler" sampler to user Texture Unit 0
-					glBindTexture(GL_TEXTURE_2D, nodeMat.textureID());
-					glUniform1i(TextureID, 0);
-				}
-
-				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, shadowEffect.depthTexture());
-				glUniform1i(ShadowMapID, 1);
-
-				node->data()->draw();
-			}
-		});
-
-
-		quadTexture.render(shadowEffect.depthTexture(), 0, 0, width() / 3, height() / 3);
+		//quadTexture.bindBuffer();
+		//quadTexture.render(reflectionEffect.colorTexture(), width() * 2.0 / 3, height() * 2.0 / 3, width() / 3, height() / 3);
 
 		glfwSwapBuffers(mWindow);
 		glfwPollEvents();
@@ -255,14 +166,42 @@ void Scene::render()
 		glfwWindowShouldClose(mWindow) == 0);
 
 	// Cleanup VBO and shader
-	glDeleteProgram(programID);
 
-	glDeleteTextures(1, &TextureID);
 }
 
 void Scene::setWindowSize(int width, int height)
 {
 	mWidth = width;
 	mHeight = height;
+}
+
+void Scene::enableShadow(bool enable)
+{
+	mIsShadowEnabled = enable;
+}
+
+bool Scene::isShadowEnabled()const
+{
+	return mIsShadowEnabled;
+}
+
+bool Scene::isShadowEnabled()
+{
+	return mIsShadowEnabled;
+}
+
+void Scene::enableReflection(bool enable)
+{
+	mIsReflectionEnabled = enable;
+}
+
+bool Scene::isReflectionEnabled()const
+{
+	return mIsReflectionEnabled;
+}
+
+bool Scene::isReflectionEnabled()
+{
+	return mIsReflectionEnabled;
 }
 

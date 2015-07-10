@@ -15,8 +15,6 @@ out vec4 lightLookAt;
 
 // Output data ; will be interpolated for each fragment.
 out vec2 UV;
-out vec4 clipCoords;
-out vec4 ShadowCoord;
 
 // Values that stay constant for the whole mesh.
 uniform mat4 OM;
@@ -27,23 +25,25 @@ uniform mat4 P;
 uniform mat4 N;
 uniform vec3 LightPosition_worldspace;
 uniform vec3 LightLookAt;
-uniform mat4 DepthBiasMVP;
+uniform vec4 ReflectionPlane;
 
 void main(){	
 
-	// Output position of the vertex, in clip space : MVP * position
-	gl_Position = MVP * OM * vec4(vertexPosition_modelspace, 1.0);
+	vec4 vertexPos = OM * vec4(vertexPosition_modelspace, 1.0);
+	float dist = dot(ReflectionPlane, vertexPos);
+	vec4 flippedVertex = vertexPos - vec4(2*dist*ReflectionPlane.xyz, 0.0);
 	
-	clipCoords = gl_Position;
-	//gl_ClipDistance[0] = dot(OM * vec4(vertexPosition_modelspace, 1.0), plane);
+	// Output position of the vertex, in clip space : MVP * position
+	gl_Position = MVP * flippedVertex;
+	
+	gl_ClipDistance[0] = -dot(flippedVertex, ReflectionPlane);
 
-	position_worldspace = OM * vec4(vertexPosition_modelspace, 1.0);
+	position_worldspace = vertexPos;
 	normal_worldspace = OM * vec4(normal_modelspace, 0.0);
+	lightLookAt = vec4(LightLookAt, 1.0);
 
 	lightPosition_worldspace = vec4(LightPosition_worldspace, 1.0);
-	lightLookAt = vec4(LightLookAt, 1.0);
 	fragmentColor = vertexColor;
 
-	ShadowCoord = DepthBiasMVP * OM * vec4(vertexPosition_modelspace, 1.0);
 	UV = vertexUV;
 }

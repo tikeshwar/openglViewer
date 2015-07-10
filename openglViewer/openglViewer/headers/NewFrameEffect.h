@@ -16,6 +16,8 @@ namespace glv
 
 		void release();
 
+		void bindBuffer();
+
 	private:
 		GLuint mShaderProgram;
 		GLuint mTexture;

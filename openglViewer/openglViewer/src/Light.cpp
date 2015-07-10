@@ -11,36 +11,30 @@ Light::Light(const char* name)
 	setPosition(glm::vec3(0, 0, 0));	
 }
 // defaults to white light with no spot component positioned at position
-Light::Light(const char* name, const glm::vec3 & position)
+Light::Light(const char* name, const glm::vec3 & position, const glm::vec3 & lookAt)
 {
 	setName(name);
 	setColor(glm::vec3(1, 1, 1));
+	setLookAt(lookAt);
 	setPosition(position);
 }
 
-Light::Light(const char* name, const glm::vec3 & color, const glm::vec3 & position)
+Light::Light(const char* name, const glm::vec3 & color, const glm::vec3 & position, const glm::vec3 & lookAt)
 {
 	setName(name);
 	setColor(color);
 	setPosition(position);
+	setLookAt(lookAt);
 }
 
-Light::Light(const char* name, const glm::vec3 & ambientColor, const glm::vec3 & diffuseColor, const glm::vec3 & specularColor)
-{
-	setName(name);
-	setAmbientColor(ambientColor);
-	setDiffuseColor(diffuseColor);
-	setSpecularColor(specularColor);
-	setPosition(glm::vec3(0, 0, 0));
-}
-
-Light::Light(const char* name, const glm::vec3 & ambientColor, const glm::vec3 & diffuseColor, const glm::vec3 & specularColor, const glm::vec3 & position)
+Light::Light(const char* name, const glm::vec3 & ambientColor, const glm::vec3 & diffuseColor, const glm::vec3 & specularColor, const glm::vec3 & position, const glm::vec3 & lookAt)
 {
 	setName(name);
 	setAmbientColor(ambientColor);
 	setDiffuseColor(diffuseColor);
 	setSpecularColor(specularColor);
 	setPosition(position);
+	setLookAt(lookAt);
 }
 
 Light::~Light()
@@ -63,6 +57,11 @@ void Light::setColor(const glm::vec3 & color)
 void Light::setPosition(const glm::vec3 & position)
 {
 	mPosition = position;
+}
+
+void Light::setLookAt(const glm::vec3 & lookAt)
+{
+	mLookAt = lookAt;
 }
 
 void Light::setAmbientColor(const glm::vec3 & color)
@@ -128,4 +127,14 @@ const glm::vec3 & Light::position()const
 glm::vec3 Light::position()
 {
 	return mPosition;
+}
+
+const glm::vec3 & Light::lookAt()const
+{
+	return mLookAt;
+}
+
+glm::vec3 Light::lookAt()
+{
+	return mLookAt;
 }

@@ -36,6 +36,14 @@ namespace glv
 
 		CameraSharedPtr activeCamera(){ return mCamera; }
 
+		void enableShadow(bool enable);
+		bool isShadowEnabled()const;
+		bool isShadowEnabled();
+
+		void enableReflection(bool enable);
+		bool isReflectionEnabled()const;
+		bool isReflectionEnabled();
+
 	private:
 		DrawableNodeSharedPtr mRootNode;
 		CameraSharedPtr mCamera;
@@ -46,6 +54,9 @@ namespace glv
 		BoundingBox mBBox;
 
 		int mWidth, mHeight;
+
+		bool mIsShadowEnabled;
+		bool mIsReflectionEnabled;
 
 	};
 }

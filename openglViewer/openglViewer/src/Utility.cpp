@@ -83,3 +83,11 @@ glv::BoundingBox Utility::updateBBox(const glv::BoundingBox & box, const glm::ma
 	return nbox;
 }
 
+glm::vec3 Utility::reflect(const glm::vec4 & plane, const glm::vec3 point)
+{
+	double dist = 2*glm::dot(plane, glm::vec4(point, 1.0));
+	glm::vec3 pointOnPlane = point - glm::vec3(plane.x*dist, plane.y*dist, plane.z*dist);
+	return pointOnPlane;
+}
+
+

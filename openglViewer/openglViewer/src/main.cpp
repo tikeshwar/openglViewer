@@ -11,7 +11,7 @@ int main()
 {
 	gScene = make_shared<glv::Scene>();
 
-	auto light = make_shared<glv::Light>("default", glm::vec3(1.0), glm::vec3(0, -75, 150));
+	auto light = make_shared<glv::Light>("default", glm::vec3(1.0), glm::vec3(0, -75, 150), glm::vec3(0,0,0));
 	gScene->addLight(light);
 
 	auto camera = make_shared<glv::Camera>();
@@ -47,7 +47,7 @@ int main()
 	//cubeMeshPtr->setMaterial(glv::Material(glm::vec3(1.0, 1.0, 1.0)));
 	}
 	*/
-	auto plyWoodMesh = parser.read("C:/TK/CCTechViewer/CCTechViewer/TestFiles/STL/ASCII/cube.stl", glv::Parser::STL);
+	auto plyWoodMesh = parser.read("C:/TK/CCTechViewer/CCTechViewer/TestFiles/STL/ASCII/angel1.stl", glv::Parser::STL);
 	glv::MeshDrawableSharedPtr plyWoodMeshPtr{ std::move(plyWoodMesh) };
 	{
 		glm::vec3 center = plyWoodMeshPtr->geomPackBBox().center();
@@ -89,8 +89,9 @@ int main()
 		bendPipeMeshPtr->setTransform(meshTransform);
 		bendPipeMeshPtr->includeInBBoxCalculation(false);
 		bendPipeMeshPtr->includeInShadowCalculation(false);
+		bendPipeMeshPtr->includeInReflectionCalculation(false);
 
-		bendPipeMeshPtr->setMaterial(glv::Material("AllWhite", glm::vec3(1.0, 1.0, 1.0), glm::vec3(1.0, 1.0, 1.0), glm::vec3(1.0, 1.0, 1.0)));
+		bendPipeMeshPtr->setMaterial(glv::Material("AllWhite", glm::vec3(1.0,1.0, 1.0), glm::vec3(1.0, 1.0, 1.0), glm::vec3(1.0, 1.0, 1.0)));
 		bendPipeMeshPtr->preDraw([](){
 			glEnable(GL_CULL_FACE);
 			glCullFace(GL_BACK);

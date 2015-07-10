@@ -39,6 +39,10 @@ namespace glv
 		virtual bool ifIncludedInShadowCalculation()const = 0;
 		virtual bool ifIncludedInShadowCalculation() = 0;
 
+		virtual void includeInReflectionCalculation(bool toInclude) = 0;
+		virtual bool ifIncludedInReflectionCalculation()const = 0;
+		virtual bool ifIncludedInReflectionCalculation() = 0;
+
 		virtual void setupDraw() = 0;
 		virtual void preDraw(const std::function<void()> & functor) = 0;
 		virtual void draw() = 0;

@@ -42,6 +42,7 @@ void ShadowEffect::initialize()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
 
+
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, mDepthTexture, 0);
 
 	// No color output in the bound framebuffer, only depth.
@@ -51,14 +52,13 @@ void ShadowEffect::initialize()
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		return;
 
-
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 }
 
 void ShadowEffect::render(glv::DrawableNodeSharedPtr drawableNode)
 {
 	// Use our shader
-	glUseProgram(mShaderProgram);
 
 	if (mCamera->projectionType() == Camera::ProjectionType::Parallel)
 	{
@@ -87,11 +87,6 @@ void ShadowEffect::render(glv::DrawableNodeSharedPtr drawableNode)
 		mDepthMVPMat = projectionMatrix * viewMatrix * modelMatrix; // Remember, matrix multiplication is the other way around
 	}
 
-
-	// Render to our framebuffer
-	glBindFramebuffer(GL_FRAMEBUFFER, mFrameBuffer);
-	glViewport(0, 0, mWidth, mHeight); // Render on the whole framebuffer, complete from the lower left corner to the upper right
-
 	// We don't use bias in the shader, but instead we draw back faces, 
 	// which are already separated from the front faces by a small distance 
 	// (if your geometry is made this way)
@@ -99,7 +94,6 @@ void ShadowEffect::render(glv::DrawableNodeSharedPtr drawableNode)
 	glCullFace(GL_FRONT);*/ // Cull back-facing triangles -> draw only front-facing triangles
 
 	// Clear the screen
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Send our transformation to the currently bound shader, 
 	// in the "MVP" uniform
@@ -114,15 +108,6 @@ void ShadowEffect::render(glv::DrawableNodeSharedPtr drawableNode)
 			node->data()->draw();
 		}
 	});
-
-	// Render to the screen
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glViewport(0, 0, mWidth, mHeight); // Render on the whole framebuffer, complete from the lower left corner to the upper right
-
-	glDisable(GL_CULL_FACE);
-	//glCullFace(GL_BACK); */// Cull back-facing triangles -> draw only front-facing triangles
-
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void ShadowEffect::release()
@@ -175,4 +160,12 @@ GLuint ShadowEffect::depthTexture()const
 GLuint ShadowEffect::depthTexture()
 {
 	return mDepthTexture;
+}
+
+void ShadowEffect::bindBuffer()
+{
+	// Render to our framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, mFrameBuffer);
+	glViewport(0, 0, mWidth, mHeight); // Render on the whole framebuffer, complete from the lower left corner to the upper right
+	glUseProgram(mShaderProgram);
 }

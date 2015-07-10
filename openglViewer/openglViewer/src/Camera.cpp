@@ -423,7 +423,7 @@ void Camera::setOrtho(const BoundingBox & bbox)
 		
 		double ar = float(mWidth) / mHeight;
 
-		double zNear = 1.0f, zFar = 10000.0f;
+		double zNear = 50.0f, zFar = 1000.0f;
 		double w = glm::tan((float)mFieldOfView) * zNear;
 		double h = w / ar;
 

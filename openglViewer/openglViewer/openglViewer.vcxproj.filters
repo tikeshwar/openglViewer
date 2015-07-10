@@ -111,6 +111,12 @@
     <ClInclude Include="headers\NewFrameEffect.h">
       <Filter>Header Files\Effects</Filter>
     </ClInclude>
+    <ClInclude Include="headers\ReflectionEffect.h">
+      <Filter>Header Files\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\NormalSceneEffect.h">
+      <Filter>Header Files\Effects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ArcBall.cpp">
@@ -167,6 +173,12 @@
     <ClCompile Include="src\NewFrameEffect.cpp">
       <Filter>Source Files\Effects</Filter>
     </ClCompile>
+    <ClCompile Include="src\ReflectionEffect.cpp">
+      <Filter>Source Files\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\NormalSceneEffect.cpp">
+      <Filter>Source Files\Effects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\ColorFragmentShader.fragmentshader">
@@ -185,6 +197,12 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="shaders\SimpleTexture.fragmentshader">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\Reflection.fragmentshader">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\Reflection.vertexshader">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

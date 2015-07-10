@@ -26,7 +26,9 @@ namespace glv
 		glm::mat4 & depthMVP();
 
 		GLuint depthTexture()const;
-		GLuint depthTexture();
+		GLuint depthTexture(); 
+
+		void bindBuffer();
 
 	private:
 		GLuint mShaderProgram;

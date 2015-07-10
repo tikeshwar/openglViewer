@@ -40,8 +40,11 @@
 #include "Camera.h"
 #include "Typedefs.h"
 
+#include "MeshDrawable.h"
 #include "NewFrameEffect.h"
 #include "ShadowEffect.h"
+#include "ReflectionEffect.h"
+#include "NormalSceneEffect.h"
 
 #include "CallbackRegister.h"
 

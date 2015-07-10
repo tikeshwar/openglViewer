@@ -64,6 +64,10 @@ namespace glv
 		bool ifIncludedInShadowCalculation()const;
 		bool ifIncludedInShadowCalculation();
 
+		void includeInReflectionCalculation(bool toInclude);
+		bool ifIncludedInReflectionCalculation()const;
+		bool ifIncludedInReflectionCalculation();
+
 	private:
 		void calculateBBox();
 		void setBufferObject(GLuint* buffer, const void* dataArray, int count, int sizeofData);
@@ -97,6 +101,7 @@ namespace glv
 		bool mToIncludeInBBox;
 		bool mToIncludeInTransform;
 		bool mToIncludeInShadow;
+		bool mToIncludeInReflection;
 
 		std::function<void()> mPreRenderCall;
 		std::function<void()> mPostRenderCall;

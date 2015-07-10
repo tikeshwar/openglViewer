@@ -374,3 +374,18 @@ bool MeshDrawable::ifIncludedInShadowCalculation()
 {
 	return mToIncludeInShadow;
 }
+
+void MeshDrawable::includeInReflectionCalculation(bool toInclude)
+{
+	mToIncludeInReflection = toInclude;
+}
+
+bool MeshDrawable::ifIncludedInReflectionCalculation()const
+{
+	return mToIncludeInReflection;
+}
+
+bool MeshDrawable::ifIncludedInReflectionCalculation()
+{
+	return mToIncludeInReflection;
+}

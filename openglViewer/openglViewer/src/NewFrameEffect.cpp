@@ -36,7 +36,6 @@ void NewFrameEffect::initialize()
 void NewFrameEffect::render(GLuint textureID, GLint top, GLint left, GLint width, GLint height)
 {
 	glViewport(top, left, width, height);
-	glUseProgram(mShaderProgram);
 
 	// Bind our texture in Texture Unit 0
 	glActiveTexture(GL_TEXTURE0);
@@ -78,4 +77,11 @@ void NewFrameEffect::release()
 	glDeleteTextures(1, &mTexture);
 	glDeleteVertexArrays(1, &mVertexArray);
 	glDeleteBuffers(1, &mVertexBuffer);
+}
+
+void NewFrameEffect::bindBuffer()
+{
+	// Render to our framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glUseProgram(mShaderProgram);
 }

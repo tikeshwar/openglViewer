@@ -119,7 +119,7 @@
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions);GLFW_DLL</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions);GLFW_DLL;GLEW_STATIC</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(GLFWx86)\include;$(GLEW)\include;$(GLM);$(SolutionDir)\extlibs\FreeImage\src;$(ProjectDir)\headers</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>Stdafx.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -165,8 +165,10 @@
     <ClInclude Include="headers\MeshData.h" />
     <ClInclude Include="headers\MeshDrawable.h" />
     <ClInclude Include="headers\NewFrameEffect.h" />
+    <ClInclude Include="headers\NormalSceneEffect.h" />
     <ClInclude Include="headers\NTreeNode.h" />
     <ClInclude Include="headers\Parser.h" />
+    <ClInclude Include="headers\ReflectionEffect.h" />
     <ClInclude Include="headers\Scene.h" />
     <ClInclude Include="headers\Shaders.h" />
     <ClInclude Include="headers\ShadowEffect.h" />
@@ -187,7 +189,9 @@
     <ClCompile Include="src\MeshData.cpp" />
     <ClCompile Include="src\MeshDrawable.cpp" />
     <ClCompile Include="src\NewFrameEffect.cpp" />
+    <ClCompile Include="src\NormalSceneEffect.cpp" />
     <ClCompile Include="src\Parser.cpp" />
+    <ClCompile Include="src\ReflectionEffect.cpp" />
     <ClCompile Include="src\Scene.cpp" />
     <ClCompile Include="src\Shaders.cpp" />
     <ClCompile Include="src\ShadowEffect.cpp" />
@@ -205,6 +209,8 @@
     <None Include="shaders\DepthRTT.fragmentshader" />
     <None Include="shaders\DepthRTT.vertexshader" />
     <None Include="shaders\Passthrough.vertexshader" />
+    <None Include="shaders\Reflection.fragmentshader" />
+    <None Include="shaders\Reflection.vertexshader" />
     <None Include="shaders\SimpleTexture.fragmentshader" />
     <None Include="shaders\TransformVertexShader.vertexshader" />
   </ItemGroup>

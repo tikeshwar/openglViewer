@@ -5,7 +5,7 @@ in vec3 fragmentColor;
 in vec4 normal_worldspace;
 in vec4 position_worldspace;
 in vec4 lightPosition_worldspace;
-in vec4 scene_center;
+in vec4 lightLookAt;
 in vec4 ShadowCoord;
 
 uniform vec3 Scene_center;
@@ -19,7 +19,10 @@ uniform float MatShininess;
 uniform int IsTexAvailable;
 uniform sampler2D TextureSampler;
 uniform sampler2D shadowMap;
-//uniform sampler2DShadow shadowMapbool;
+uniform sampler2D ReflectionMap;
+
+uniform int reflectionEnabled;
+uniform int shadowEnabled;
 
 // light - single only :(
 uniform vec3 LightAmbientColor;
@@ -28,9 +31,10 @@ uniform vec3 LightSpecularColor;
 
 // Interpolated values from the vertex shaders
 in vec2 UV;
+in vec4 clipCoords;
 
 // Ouput data
-out vec3 color;
+layout(location = 0) out vec4 color;
 
 vec2 poissonDisk[16] = vec2[]( 
    vec2( -0.94201624, -0.39906216 ), 
@@ -60,8 +64,9 @@ float random(vec3 seed, int i){
 
 void main(){
 
-	//gl_FragColor = texture( TextureSampler, UV );return;
-
+	vec2 texCoords = (clipCoords.xy/clipCoords.w)/2.0 + 0.5;
+	vec4 reflectColor = texture( ReflectionMap, texCoords );
+	
 	vec4 matDiffuse = vec4(MatAmbientColor, 1.0);
 	vec4 matAmbient = vec4(MatDiffuseColor, 1.0)*matDiffuse;
 	vec4 matSpecular = vec4(MatSpecularColor, 1.0);
@@ -81,7 +86,7 @@ void main(){
 	vec4 R = normalize(-reflect(L,N));
 	
 	float d = length(lightPosition_worldspace - position_worldspace);
-	float pd = length(scene_center -  lightPosition_worldspace);
+	float pd = length(lightLookAt -  lightPosition_worldspace);
 	float lightPower = pow(20,3.2);
 
 	float cosTheta = clamp( dot( N,L ), 0,1 );
@@ -121,21 +126,28 @@ void main(){
 	//	visibility -= 0.2*(1.0-texture( shadowMap, vec3(ShadowCoord.xy + poissonDisk[index]/700.0,  (ShadowCoord.z-bias)/ShadowCoord.w) ));
 	//}  
 	
-	float bias = 0.002;
-	float shadowValue = 0.0;
-	int count = 0;
-	for(float u = -bias*10; u <= bias*10; u+=bias)
-		for(float v = -bias*10; v <= bias*10; v+=bias)
-		{
-			count++;
-			if(texture( shadowMap, vec2(ShadowCoord.xy) + vec2(u,v)).r >= ((ShadowCoord.z - bias)/ShadowCoord.w))
+	if(shadowEnabled > 0)
+	{
+		float bias = 0.002;
+		float shadowValue = 0.0;
+		int count = 0;
+		for(float u = -bias*10; u <= bias*10; u+=bias)
+			for(float v = -bias*10; v <= bias*10; v+=bias)
 			{
-				 shadowValue += 1.0;
+				count++;
+				if(texture( shadowMap, vec2(ShadowCoord.xy) + vec2(u,v)).r >= ((ShadowCoord.z - bias)/ShadowCoord.w))
+				{
+					 shadowValue += 1.0;
+				}
 			}
-		}
-	shadowValue /= count;
-	if(shadowValue < 0.25)
-		shadowValue = 0.25;
+		shadowValue /= count;
+		if(shadowValue < 0.25)
+			shadowValue = 0.25;
 
-	gl_FragColor = shadowValue*(finalAmbient + finalDiffuse + finalSpecular);
+		color = shadowValue*(finalAmbient + finalDiffuse + finalSpecular);
+	}
+	else if(reflectionEnabled > 0)
+		color = reflectColor*(finalAmbient + finalDiffuse + finalSpecular);
+	else
+		color = (finalAmbient + finalDiffuse + finalSpecular);
 }

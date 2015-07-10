@@ -1,0 +1,70 @@
+#version 330 core
+
+// Interpolated values from the vertex shaders
+in vec3 fragmentColor;
+in vec4 normal_worldspace;
+in vec4 position_worldspace;
+in vec4 lightPosition_worldspace;
+in vec4 lightLookAt;
+
+uniform vec3 LightPosition_worldspace;
+uniform vec3 LightLookAt;
+
+// material
+uniform vec3 MatAmbientColor;
+uniform vec3 MatDiffuseColor;
+uniform vec3 MatSpecularColor;
+uniform float MatShininess;
+uniform int IsTexAvailable;
+uniform sampler2D TextureSampler;
+
+// light - single only :(
+uniform vec3 LightAmbientColor;
+uniform vec3 LightDiffuseColor;
+uniform vec3 LightSpecularColor;
+
+// Interpolated values from the vertex shaders
+in vec2 UV;
+
+// Ouput data
+layout(location = 0) out vec4 color;
+
+void main(){
+
+	//vec2 texCoords = (clipCoords.xy/clipCoords.w)/2.0 + 0.5;
+	//color = texture( shadowMap, UV );return;
+	
+	vec4 matDiffuse = vec4(MatAmbientColor, 1.0);
+	vec4 matAmbient = vec4(MatDiffuseColor, 1.0)*matDiffuse;
+	vec4 matSpecular = vec4(MatSpecularColor, 1.0);
+	float shininess = MatShininess;
+
+	if(IsTexAvailable > 0)
+	{
+		vec4 color = texture2D( TextureSampler, UV );
+		matDiffuse = color;
+		matAmbient = color*matDiffuse;
+		matSpecular = color;
+	}
+	 
+	vec4 N = normalize(normal_worldspace);
+	vec4 L = normalize(lightPosition_worldspace - position_worldspace);
+	vec4 E = normalize(-position_worldspace);
+	vec4 R = normalize(-reflect(L,N));
+	
+	float d = length(lightPosition_worldspace - position_worldspace);
+	float pd = length(lightLookAt -  lightPosition_worldspace);
+	float lightPower = pow(20,3.2);
+
+	float cosTheta = clamp( dot( N,L ), 0,1 );
+	float cosAlpha = clamp( dot( E,R ), 0,1 );
+
+	//attenuation
+    float attenuation = 1.0 / (1.0 + d + d*d);
+
+	vec4 finalAmbient = vec4(LightAmbientColor,1.0)*matAmbient;
+	vec4 finalDiffuse = vec4(LightDiffuseColor,1.0)*matDiffuse*cosTheta;
+	vec4 finalSpecular = vec4(LightSpecularColor,1.0)*matSpecular*pow(cosAlpha, shininess)*attenuation*lightPower;
+
+	color =  (finalAmbient + finalDiffuse + finalSpecular);
+}

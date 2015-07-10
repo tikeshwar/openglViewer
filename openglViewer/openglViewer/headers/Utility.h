@@ -17,6 +17,8 @@ namespace glv
 		void traversalUpdateTransform(glv::DrawableNodeSharedPtr drawableNode);
 
 		glv::BoundingBox updateBBox(const glv::BoundingBox & box, const glm::mat4 & mat);
+
+		glm::vec3 reflect(const glm::vec4 & plane, const glm::vec3 point);
 	};
 }
 
