@@ -9,8 +9,8 @@ namespace glv
 		~NormalSceneEffect();
 
 		void initialize();
-		void renderWithReflection(glv::DrawableNodeSharedPtr drawableNode, const glv::ReflectionEffect & reflectionEffect);
-		void renderWithShadow(glv::DrawableNodeSharedPtr drawableNode, const glv::ShadowEffect & shadowEffect);
+		void renderWithReflection(glv::DrawableNodeSharedPtr drawableNode);
+		void renderWithShadow(glv::DrawableNodeSharedPtr drawableNode);
 		void render(glv::DrawableNodeSharedPtr drawableNode);
 
 		void release();
@@ -29,6 +29,14 @@ namespace glv
 		GLuint colorTexture();
 
 		void bindBuffer();
+
+		void setReflectionEffect(glv::ReflectionEffectSharedPtr reflectionEffect);
+		glv::ReflectionEffectSharedPtr reflectionEffect()const;
+		glv::ReflectionEffectSharedPtr reflectionEffect();
+
+		void setShadowEffect(glv::ShadowEffectSharedPtr shadowEffect);
+		glv::ShadowEffectSharedPtr shadowEffect()const;
+		glv::ShadowEffectSharedPtr shadowEffect();
 
 	private:
 		GLuint mProgramID;
@@ -69,5 +77,8 @@ namespace glv
 
 		glv::CameraSharedPtr mCamera;
 		glv::LightSharedPtr mLight;
+
+		glv::ReflectionEffectSharedPtr mReflectionEffect;
+		glv::ShadowEffectSharedPtr mShadowEffect;
 	};
 }

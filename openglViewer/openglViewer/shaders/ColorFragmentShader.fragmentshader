@@ -18,8 +18,8 @@ uniform vec3 MatSpecularColor;
 uniform float MatShininess;
 uniform int IsTexAvailable;
 uniform sampler2D TextureSampler;
-uniform sampler2D shadowMap;
 uniform sampler2D ReflectionMap;
+uniform sampler2D shadowMap;
 
 uniform int reflectionEnabled;
 uniform int shadowEnabled;
@@ -126,6 +126,10 @@ void main(){
 	//	visibility -= 0.2*(1.0-texture( shadowMap, vec3(ShadowCoord.xy + poissonDisk[index]/700.0,  (ShadowCoord.z-bias)/ShadowCoord.w) ));
 	//}  
 	
+	color = (finalAmbient + finalDiffuse + finalSpecular);
+
+	if(reflectionEnabled > 0)
+		color *= reflectColor;
 	if(shadowEnabled > 0)
 	{
 		float bias = 0.002;
@@ -135,7 +139,7 @@ void main(){
 			for(float v = -bias*10; v <= bias*10; v+=bias)
 			{
 				count++;
-				if(texture( shadowMap, vec2(ShadowCoord.xy) + vec2(u,v)).r >= ((ShadowCoord.z - bias)/ShadowCoord.w))
+				if(texture( shadowMap, vec2(ShadowCoord.xy/ShadowCoord.w) + vec2(u,v)).r >= ((ShadowCoord.z - bias)/ShadowCoord.w))
 				{
 					 shadowValue += 1.0;
 				}
@@ -144,10 +148,7 @@ void main(){
 		if(shadowValue < 0.25)
 			shadowValue = 0.25;
 
-		color = shadowValue*(finalAmbient + finalDiffuse + finalSpecular);
+		color *= shadowValue;
 	}
-	else if(reflectionEnabled > 0)
-		color = reflectColor*(finalAmbient + finalDiffuse + finalSpecular);
-	else
-		color = (finalAmbient + finalDiffuse + finalSpecular);
+
 }

@@ -135,7 +135,6 @@ void ReflectionEffect::render(glv::DrawableNodeSharedPtr drawableNode)
 			node->data()->draw();
 		}
 	});
-
 }
 
 void ReflectionEffect::release()

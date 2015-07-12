@@ -109,15 +109,18 @@ void Scene::render()
 	// Cull triangles which normal is not towards the camera
 	glEnable(GL_CULL_FACE);
 
-	glv::NormalSceneEffect normalSceneEffect(mCamera, light, width(), height());
-	normalSceneEffect.initialize();
+	auto normalSceneEffect = std::make_shared<NormalSceneEffect>(mCamera, light, width(), height());
+	normalSceneEffect->initialize();
 
-	glv::ShadowEffect shadowEffect(light, mCamera, width(), height());
-	shadowEffect.initialize();
+	auto shadowEffect = std::make_shared<ShadowEffect>(light, mCamera, width(), height());
+	shadowEffect->initialize();
 
 	const glm::vec4 reflectionPlane(0, 0, 1, -mBBox.lower().z);
-	glv::ReflectionEffect reflectionEffect(reflectionPlane, mCamera, light, width(), height());
-	reflectionEffect.initialize();
+	auto reflectionEffect = std::make_shared<ReflectionEffect>(reflectionPlane, mCamera, light, width(), height());
+	reflectionEffect->initialize();
+
+	normalSceneEffect->setReflectionEffect(reflectionEffect);
+	normalSceneEffect->setShadowEffect(shadowEffect);
 
 	glv::NewFrameEffect quadTexture;
 	quadTexture.initialize();
@@ -127,28 +130,28 @@ void Scene::render()
 		glEnable(GL_CLIP_DISTANCE0);
 
 		// first grab shadow from light POV
-		shadowEffect.bindBuffer();
+		shadowEffect->bindBuffer();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		shadowEffect.render(mRootNode);
+		shadowEffect->render(mRootNode);
 
 		// render it to reflection frame buffer
-		reflectionEffect.bindBuffer();
+		reflectionEffect->bindBuffer();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		reflectionEffect.render(mRootNode);
+		reflectionEffect->render(mRootNode);
 
-		normalSceneEffect.bindBuffer();
+		normalSceneEffect->bindBuffer();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		if (mIsReflectionEnabled)
-			normalSceneEffect.renderWithReflection(mRootNode, reflectionEffect);
-		if (mIsShadowEnabled)
-			normalSceneEffect.renderWithShadow(mRootNode, shadowEffect);
-		if (!mIsShadowEnabled && !mIsReflectionEnabled)
-			normalSceneEffect.render(mRootNode);
+			normalSceneEffect->renderWithReflection(mRootNode);
+		//if (mIsShadowEnabled)
+			//normalSceneEffect->renderWithShadow(mRootNode);
+		//if (!mIsShadowEnabled && !mIsReflectionEnabled)
+		normalSceneEffect->render(mRootNode);
 
 		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		//quadTexture.bindBuffer();
-		//quadTexture.render(shadowEffect.depthTexture(), 0, 0, width() / 3, height() / 3);
+		//quadTexture.render(shadowEffect->depthTexture(), 0, 0, width() / 3, height() / 3);
 
 		//quadTexture.bindBuffer();
 		//quadTexture.render(reflectionEffect.colorTexture(), width() * 2.0 / 3, height() * 2.0 / 3, width() / 3, height() / 3);

@@ -87,8 +87,9 @@ void NormalSceneEffect::initialize()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void NormalSceneEffect::renderWithReflection(glv::DrawableNodeSharedPtr drawableNode, const glv::ReflectionEffect & reflectionEffect)
+void NormalSceneEffect::renderWithReflection(glv::DrawableNodeSharedPtr drawableNode)
 {
+	// reflect the camera about the plane
 
 
 	//glEnable(GL_CULL_FACE);
@@ -109,7 +110,7 @@ void NormalSceneEffect::renderWithReflection(glv::DrawableNodeSharedPtr drawable
 		0.5, 0.5, 0.5, 1.0
 		);
 
-	glm::mat4 depthBiasMVP = biasMatrix*MVP;
+	glm::mat4 depthBiasMVP = biasMatrix*mShadowEffect->depthMVP();
 	//glm::mat4 depthBiasMVP = depthMVP;
 	glUniformMatrix4fv(mDepthBiasID, 1, GL_FALSE, &depthBiasMVP[0][0]);
 
@@ -132,7 +133,7 @@ void NormalSceneEffect::renderWithReflection(glv::DrawableNodeSharedPtr drawable
 	}
 
 	glUniform1i(mReflectionEnabledID, 1);
-	glUniform1i(mShadowEnabledID, 0);
+	glUniform1i(mShadowEnabledID, 1);
 
 	drawableNode->traverse([&](const DrawableNodeSharedPtr & node)
 	{
@@ -163,15 +164,19 @@ void NormalSceneEffect::renderWithReflection(glv::DrawableNodeSharedPtr drawable
 			}
 
 			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, reflectionEffect.colorTexture());
+			glBindTexture(GL_TEXTURE_2D, mReflectionEffect->colorTexture());
 			glUniform1i(mReflectionID, 1);
+
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, mShadowEffect->depthTexture());
+			glUniform1i(mShadowMapID, 2);
 
 			node->data()->draw();
 		}
 	});										 
 }
 
-void NormalSceneEffect::renderWithShadow(glv::DrawableNodeSharedPtr drawableNode, const glv::ShadowEffect & shadowEffect)
+void NormalSceneEffect::renderWithShadow(glv::DrawableNodeSharedPtr drawableNode)
 {
 
 
@@ -192,7 +197,7 @@ void NormalSceneEffect::renderWithShadow(glv::DrawableNodeSharedPtr drawableNode
 		0.5, 0.5, 0.5, 1.0
 		);
 
-	glm::mat4 depthBiasMVP = biasMatrix*shadowEffect.depthMVP();
+	glm::mat4 depthBiasMVP = biasMatrix*mShadowEffect->depthMVP();
 	//glm::mat4 depthBiasMVP = depthMVP;
 	glUniformMatrix4fv(mDepthBiasID, 1, GL_FALSE, &depthBiasMVP[0][0]);
 
@@ -245,7 +250,7 @@ void NormalSceneEffect::renderWithShadow(glv::DrawableNodeSharedPtr drawableNode
 			}
 
 			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, shadowEffect.depthTexture());
+			glBindTexture(GL_TEXTURE_2D, mShadowEffect->depthTexture());
 			glUniform1i(mShadowMapID, 1);
 
 			node->data()->draw();
@@ -382,4 +387,34 @@ void NormalSceneEffect::bindBuffer()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, mWidth, mHeight); // Render on the whole framebuffer, complete from the lower left corner to the upper right
 	glUseProgram(mProgramID);
+}
+
+void NormalSceneEffect::setReflectionEffect(glv::ReflectionEffectSharedPtr reflectionEffect)
+{
+	mReflectionEffect = reflectionEffect;
+}
+
+glv::ReflectionEffectSharedPtr NormalSceneEffect::reflectionEffect()const
+{
+	return mReflectionEffect;
+}
+
+glv::ReflectionEffectSharedPtr NormalSceneEffect::reflectionEffect()
+{
+	return mReflectionEffect;
+}
+
+void NormalSceneEffect::setShadowEffect(glv::ShadowEffectSharedPtr shadowEffect)
+{
+	mShadowEffect = shadowEffect;
+}
+
+glv::ShadowEffectSharedPtr NormalSceneEffect::shadowEffect()const
+{
+	return mShadowEffect;
+}
+
+glv::ShadowEffectSharedPtr NormalSceneEffect::shadowEffect()
+{
+	return mShadowEffect;
 }

@@ -10,6 +10,9 @@ namespace glv
 	class Camera;
 	class Light;
 	class Scene;
+	class ReflectionEffect;
+	class ShadowEffect;
+	class NormalSceneEffect;
 
 	typedef std::shared_ptr<Drawable> DrawableSharedPtr;
 	typedef std::shared_ptr<MeshDrawable> MeshDrawableSharedPtr;
@@ -18,4 +21,7 @@ namespace glv
 
 	typedef std::shared_ptr<Camera> CameraSharedPtr;
 	typedef std::shared_ptr<Light> LightSharedPtr;
+	typedef std::shared_ptr<ReflectionEffect> ReflectionEffectSharedPtr;
+	typedef std::shared_ptr<ShadowEffect> ShadowEffectSharedPtr;
+	typedef std::shared_ptr<NormalSceneEffect> NormalSceneEffectSharedPtr;
 }
