@@ -58,7 +58,7 @@ void Camera::resetView()
 	setZoom(1.0);
 	mArcBall.setToInitialState();
 	mMVP = mViewMatrix = mModelMatrix = mProjectionMatrix = glm::mat4();
-	setOrtho(mBBox);
+	setOptimalView();
 }
 
 void Camera::resetView(ProjectionType projectionType)
@@ -66,13 +66,13 @@ void Camera::resetView(ProjectionType projectionType)
 	if (projectionType == ProjectionType::Parallel)
 	{
 		mProjectionType = ProjectionType::Parallel;
-		setOrtho(mBBox);
+		setOrtho();
 		updateZoom(0, 0);
 	}
 	else if (projectionType == ProjectionType::Perspective)
 	{
 		mProjectionType = ProjectionType::Perspective;
-		setOrtho(mBBox);
+		setOrtho();
 		updateZoom(0, 0);
 	}
 }
@@ -413,36 +413,47 @@ const glm::mat4 & Camera::MVP()const
 	return mMVP;
 }
 
-void Camera::setOrtho(const BoundingBox & bbox)
+void Camera::setBoundingBox(const glv::BoundingBox & bbox)
 {
 	mBBox = bbox;
+
+	setWindowSize(mWidth, mHeight);
+	resetView();
+}
+
+const glv::BoundingBox & Camera::boundingBox()const
+{
+	return mBBox;
+}
+
+glv::BoundingBox & Camera::boundingBox()
+{
+	return mBBox;
+}
+
+// set up a bounding sphere and put the camera
+// at the double the radius
+void Camera::setOrtho()
+{
+	// calculate the bounding sphere of the box
+	float radius = glm::length(mBBox.diagonal())*0.5;
+	const glm::vec3 & center = mBBox.center();
+
 	if (Camera::ProjectionType::Perspective == mProjectionType)
 	{
-		glm::vec3 center = bbox.center();
-		double distance = 0.5*glm::sqrt(bbox.diagonal().y*bbox.diagonal().y + bbox.diagonal().x + bbox.diagonal().x) / glm::tan(mFieldOfView / 2.0f);
-		
 		double ar = float(mWidth) / mHeight;
 
-		double zNear = 50.0f, zFar = 1000.0f;
+		double zNear = radius, zFar = zNear + 8.0*radius;
 		double w = glm::tan((float)mFieldOfView) * zNear;
 		double h = w / ar;
 
 		mFrustumLeft = -w, mFrustumRight = w;
 		mFrustumBottom = -h, mFrustumTop = h;
 		mFrustumNear = zNear, mFrustumFar = zFar;
-
-
-		//mLookAt = glm::vec3(0, 0, 0);
-		//mPosition = glm::vec3(mLookAt.x, mLookAt.y, mLookAt.z + distance);
-		//mUpVector = glm::vec3(0, 1, 0);
 	}
 	else if (Camera::ProjectionType::Parallel == mProjectionType)
 	{
-		glm::vec3 center = bbox.center();
-		//glm::vec3 lower = bbox.lower();
-		//glm::vec3 upper = bbox.upper();
-		//double distance = glm::sqrt(bbox.diagonal().y*bbox.diagonal().y + bbox.diagonal().x + bbox.diagonal().x);
-		double distance = glm::length(bbox.diagonal());
+		double distance = radius*2.0f*glm::cos(glm::radians(45.0f));
 
 		double ar = float(mWidth) / mHeight;
 
@@ -452,10 +463,38 @@ void Camera::setOrtho(const BoundingBox & bbox)
 		mOrthoBottom = 0 - distance / ar;
 		mOrthoNear = 0 -  distance*20;
 		mOrthoFar = 0 + distance*20;
-
-		//mLookAt = glm::vec3(0, 0, 0);;
-		//mPosition = glm::vec3(mLookAt.x, mLookAt.y, mLookAt.z + distance);
-		//mUpVector = glm::vec3(0, 1, 0);
 	}
-	apply();
 }
+
+void Camera::setCamera()
+{
+	// calculate the bounding sphere of the box
+	float radius = glm::length(mBBox.diagonal())*0.5;
+	const glm::vec3 & center = mBBox.center();
+
+	if (Camera::ProjectionType::Perspective == mProjectionType)
+	{
+		float viewDist = radius*2.0f*glm::cos(glm::radians(45.0f));
+
+		mLookAt = center;
+		mPosition = glm::vec3(-viewDist, -viewDist, viewDist);
+		mUpVector = glm::vec3(0, 0, 1);
+	}
+	else if (Camera::ProjectionType::Parallel == mProjectionType)
+	{
+		float viewDist = radius;
+
+		mLookAt = center;
+		mPosition = glm::vec3(-viewDist, -viewDist, viewDist);
+		mUpVector = glm::vec3(0, 0, 1);
+	}
+}
+
+void Camera::setOptimalView()
+{
+	setOrtho();
+	setCamera();
+}
+
+
+

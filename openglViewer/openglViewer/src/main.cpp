@@ -9,15 +9,12 @@ shared_ptr<glv::Scene> gScene;
 
 int main()
 {
-	gScene = make_shared<glv::Scene>();
+	gScene = make_shared<glv::Scene>(800, 800);
 
 	auto light = make_shared<glv::Light>("default", glm::vec3(1.0), glm::vec3(0, -75, 150), glm::vec3(0,0,0));
 	gScene->addLight(light);
 
 	auto camera = make_shared<glv::Camera>();
-	camera->setPosition(-100, -100, 100);
-	camera->setUpVector(0, 0, 1.0);
-	camera->setLookAt(0, 0, 0);
 	gScene->addCamera(camera);
 
 	glv::Parser parser;
@@ -112,9 +109,8 @@ int main()
 
 	gScene->addDrawableNode(rootdsp);
 
-	cout << gScene->boundingBox().center().x;
-	cout << gScene->boundingBox().center().y;
-	cout << gScene->boundingBox().center().z;
+	camera->setBoundingBox(rootdsp->data()->geomPackBBox());
+	camera->setWindowSize(gScene->width(), gScene->height());
 
 	gScene->render();
 

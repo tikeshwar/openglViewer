@@ -5,8 +5,13 @@ using namespace glv;
 
 Scene::Scene()
 {
-	mWidth = 640;
-	mHeight = 480;
+	Scene(800, 640);
+}
+
+Scene::Scene(int width, int height)
+: mWidth(width)
+, mHeight(height)
+{
 	mIsReflectionEnabled = true;
 	mIsShadowEnabled = true;
 
@@ -40,13 +45,6 @@ Scene::Scene()
 
 	// Ensure we can capture the escape key being pressed below
 	glfwSetInputMode(mWindow, GLFW_STICKY_KEYS, GL_TRUE);
-}
-
-Scene::Scene(int width, int height)
-: mWidth(width)
-, mHeight(height)
-{
-	Scene();
 }
 
 Scene::~Scene()
@@ -91,11 +89,6 @@ void Scene::removeLight(const char* lightName)
 
 void Scene::render()
 {
-	mCamera->setWindowSize(mWidth, mHeight);
-	mCamera->setOrtho(mBBox);
-	//mCamera->resetView(Camera::Parallel);	 // need to do coz shadows are created using orthographic
-	//mCamera->resetView(Camera::Perspective);
-
 	LightSharedPtr light;
 	if (!mLights.empty())
 		light = mLights.begin()->second;
@@ -145,10 +138,11 @@ void Scene::render()
 
 		normalSceneEffect.bindBuffer();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		if (mIsShadowEnabled)
-			normalSceneEffect.renderWithShadow(mRootNode, shadowEffect);
+
 		if (mIsReflectionEnabled)
 			normalSceneEffect.renderWithReflection(mRootNode, reflectionEffect);
+		if (mIsShadowEnabled)
+			normalSceneEffect.renderWithShadow(mRootNode, shadowEffect);
 		if (!mIsShadowEnabled && !mIsReflectionEnabled)
 			normalSceneEffect.render(mRootNode);
 

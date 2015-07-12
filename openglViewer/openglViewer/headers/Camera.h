@@ -30,7 +30,9 @@ namespace glv
 		void setZoom(double zoomfactor);
 
 		void setWindowSize(int width, int height);
-		void setOrtho(const BoundingBox & bbox);
+		void setOrtho();
+		void setCamera();
+		void setOptimalView();
 
 		int setKeyCallback(int x, int y, int key, int action);
 		int setMouseMoveCallback(int x, int y);
@@ -90,6 +92,10 @@ namespace glv
 
 		int width()const{ return mWidth; }
 		int height()const{ return mHeight; }
+
+		void setBoundingBox(const glv::BoundingBox & bbox);
+		const glv::BoundingBox & boundingBox()const;
+		glv::BoundingBox & boundingBox();
 
 	private:
 		ProjectionType mProjectionType;
