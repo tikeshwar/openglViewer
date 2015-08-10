@@ -23,6 +23,9 @@ namespace glv
 		void setDiffuseColor(const glm::vec3 & color);
 		void setSpecularColor(const glm::vec3 & color);
 
+		void setSpotComponents(const glm::vec3& spotDirection, float spotCutoff);
+		void turnOnSpotLight(bool turnOn);
+
 		const char* name();
 		const char* name()const;
 
@@ -39,6 +42,24 @@ namespace glv
 		const glm::vec3 & lookAt()const;
 		glm::vec3 lookAt();
 
+		const glm::vec3 & spotDirection()const;
+		glm::vec3 spotDirection();
+
+		float spotCutoff()const;
+		float spotCutoff();
+
+		float constantAttenuation()const;
+		float constantAttenuation();
+
+		float linearAttenuation()const;
+		float linearAttenuation();
+
+		float quadraticAttenuation()const;
+		float quadraticAttenuation();
+
+		bool isSpotLightOn()const;
+		bool isSpotLightOn();
+
 	private:
 		glm::vec3 mAmbientColor;
 		glm::vec3 mDiffuseColor;
@@ -46,14 +67,17 @@ namespace glv
 
 		glm::vec3 mPosition;
 		glm::vec3 mLookAt;
-		glm::vec3 mSpotDirection;
-		glm::vec3 mSpotCutoff;
 
+
+		glm::vec3 mSpotDirection;
+		float mSpotCutoff;
 		float mConstantAttenuation;
 		float mLinearAttenuation;
 		float mQuadraticAttenuation;
+		bool mIsSpotTurnedOn;
 
 		std::string mName;
 	};
+
 }
 

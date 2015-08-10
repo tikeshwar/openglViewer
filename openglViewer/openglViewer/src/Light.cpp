@@ -79,6 +79,17 @@ void Light::setSpecularColor(const glm::vec3 & color)
 	mSpecularColor = color;
 }
 
+void Light::setSpotComponents(const glm::vec3& spotDirection, float spotCutoff)
+{
+	mSpotDirection = spotDirection;
+	mSpotCutoff = spotCutoff;
+}
+
+void Light::turnOnSpotLight(bool turnOn)
+{
+	mIsSpotTurnedOn = turnOn;
+}
+
 const char* Light::name()
 {
 	return mName.data();
@@ -137,4 +148,58 @@ const glm::vec3 & Light::lookAt()const
 glm::vec3 Light::lookAt()
 {
 	return mLookAt;
+}
+
+const glm::vec3 & Light::spotDirection()const
+{
+	return mSpotDirection;
+}
+glm::vec3 Light::spotDirection()
+{
+	return mSpotDirection;
+}
+
+float Light::spotCutoff()const
+{
+	return mSpotCutoff;
+}
+float Light::spotCutoff()
+{
+	return mSpotCutoff;
+}
+
+float Light::constantAttenuation()const
+{
+	return mConstantAttenuation;
+}
+float Light::constantAttenuation()
+{
+	return mConstantAttenuation;
+}
+
+float Light::linearAttenuation()const
+{
+	return mLinearAttenuation;
+}
+float Light::linearAttenuation()
+{
+	return mLinearAttenuation;
+}
+
+float Light::quadraticAttenuation()const
+{
+	return mQuadraticAttenuation;
+}
+float Light::quadraticAttenuation()
+{
+	return mQuadraticAttenuation;
+}
+
+bool Light::isSpotLightOn()const
+{
+	return mIsSpotTurnedOn;
+}
+bool Light::isSpotLightOn()
+{
+	return mIsSpotTurnedOn;
 }
